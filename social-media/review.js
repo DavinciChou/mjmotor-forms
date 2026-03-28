@@ -69,8 +69,8 @@ function renderMeta() {
   setText('r-applicant',      _fields[SOCIAL.FIELD.APPLICANT_NAME]  ?? '—');
   setText('r-location',       _fields[SOCIAL.FIELD.LOCATION]        ?? '—');
   setText('r-platform',       _fields[SOCIAL.FIELD.PLATFORM]        ?? '—');
-  setText('r-post-date',      UI.formatDate(_fields[SOCIAL.FIELD.POST_DATE]));
-  setText('r-caption',        _fields[SOCIAL.FIELD.CAPTION]         ?? '—');
+  setText('r-post-date',      UI.formatDate(_fields[SOCIAL.FIELD.SHOOT_DATE]));
+  setText('r-caption',        _fields[SOCIAL.FIELD.CONTENT]         ?? '—');
   setText('r-submitted-at',   UI.formatDateTime(_fields[SOCIAL.FIELD.SUBMITTED_AT]));
   setText('r-item-id',        `#${_item.id}`);
 }

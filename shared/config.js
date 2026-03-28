@@ -61,17 +61,18 @@ export const SOCIAL = {
     RESUBMIT: '重新送審',
   },
 
-  /** SP List 欄位名（internal name） */
+  /** SP List 欄位名（internal name，與 SP List 實際欄位一致） */
   FIELD: {
     TITLE:          'Title',
     APPLICANT_NAME: 'ApplicantName',
     APPLICANT_EMAIL:'ApplicantEmail',
     LOCATION:       'Location',
     PLATFORM:       'Platform',
-    POST_DATE:      'PostDate',
-    CAPTION:        'Caption',
-    STAGE:          'ReviewStage',
-    STATUS:         'ReviewStatus',
+    SHOOT_DATE:     'ShootDate',     // 預計拍攝日期
+    PURPOSE:        'Purpose',       // 拍攝目的
+    CONTENT:        'Content',       // 素材內容說明（貼文內容）
+    STAGE:          'Stage',         // 審核階段（內部流程用）
+    STATUS:         'Status',        // 審核狀態（對外顯示用）
     // 各關審核人
     REVIEWER2_NAME:  'Reviewer2Name',
     REVIEWER2_EMAIL: 'Reviewer2Email',

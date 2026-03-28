@@ -254,8 +254,8 @@ async function onSubmit() {
     const fields = collectFields();
     const newItem = await API.createItem(SOCIAL.LIST_NAME, {
       ...fields,
-      [SOCIAL.FIELD.STAGE]:        SOCIAL.STAGE.PENDING,
-      [SOCIAL.FIELD.STATUS]:       SOCIAL.STAGE.PENDING,
+      [SOCIAL.FIELD.STAGE]:        SOCIAL.STAGE.STAGE2,   // 等待所長審核
+      [SOCIAL.FIELD.STATUS]:       SOCIAL.STAGE.PENDING,  // 送審中
       [SOCIAL.FIELD.SUBMITTED_AT]: new Date().toISOString(),
     });
     const itemId = newItem.id;
@@ -298,8 +298,8 @@ function collectFields() {
     [SOCIAL.FIELD.APPLICANT_EMAIL]: getVal('applicant-email'),
     [SOCIAL.FIELD.LOCATION]:        getVal('location'),
     [SOCIAL.FIELD.PLATFORM]:        getVal('platform'),
-    [SOCIAL.FIELD.POST_DATE]:       getVal('post-date'),
-    [SOCIAL.FIELD.CAPTION]:         getVal('caption'),
+    [SOCIAL.FIELD.SHOOT_DATE]:      getVal('post-date'),
+    [SOCIAL.FIELD.CONTENT]:         getVal('caption'),
     // reviewer 資料讀取隱藏 input（-val 後綴）
     [SOCIAL.FIELD.REVIEWER2_NAME]:  getVal('reviewer2-name-val'),
     [SOCIAL.FIELD.REVIEWER2_EMAIL]: getVal('reviewer2-email-val'),
