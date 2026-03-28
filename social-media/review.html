@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>自媒體素材審核 — 審核詳情</title>
+
+  <!-- MSAL.js v2（CDN） -->
+  <script src="https://alcdn.msauth.net/browser/2.38.3/js/msal-browser.min.js"></script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --primary:   #3182ce;
+      --primary-l: #ebf8ff;
+      --success:   #38a169;
+      --danger:    #e53e3e;
+      --border:    #e2e8f0;
+      --bg:        #f7fafc;
+      --text:      #2d3748;
+      --sub:       #718096;
+      --radius:    10px;
+      --shadow:    0 2px 12px rgba(0,0,0,.08);
+    }
+
+    body {
+      font-family: 'Segoe UI', 'Microsoft JhengHei', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ── Topbar ── */
+    .topbar {
+      background: #1a365d;
+      color: #fff;
+      padding: 0 24px;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      box-shadow: 0 2px 8px rgba(0,0,0,.18);
+    }
+    .topbar-title { font-size: 17px; font-weight: 700; letter-spacing: .5px; }
+    .topbar-sub { font-size: 12px; opacity: .7; }
+    .topbar-spacer { flex: 1; }
+    .user-badge { font-size: 13px; opacity: .85; display: flex; align-items: center; gap: 6px; }
+
+    /* ── 容器 ── */
+    .page-wrap { max-width: 800px; margin: 32px auto; padding: 0 16px 60px; }
+
+    /* ── 卡片 ── */
+    .card {
+      background: #fff;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 24px 28px;
+      margin-bottom: 20px;
+    }
+    .card-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--primary);
+      margin-bottom: 16px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid var(--primary-l);
+    }
+
+    /* ── 申請資訊表格 ── */
+    .info-grid { display: grid; grid-template-columns: 120px 1fr; gap: 10px 16px; font-size: 14px; }
+    .info-label { color: var(--sub); font-weight: 600; align-self: start; padding-top: 1px; }
+    .info-value { color: var(--text); word-break: break-word; }
+    .info-value.caption { white-space: pre-wrap; background: var(--bg); border-radius: 6px; padding: 8px 10px; }
+
+    /* ── 進度條容器 ── */
+    #r-tracker { padding: 8px 0 4px; }
+
+    /* ── 媒體預覽 ── */
+    .media-row { margin-bottom: 16px; }
+    .media-label { font-size: 13px; font-weight: 600; color: var(--sub); margin-bottom: 8px; }
+    #r-photos { display: flex; flex-wrap: wrap; gap: 12px; }
+    #r-videos { display: flex; flex-direction: column; gap: 12px; }
+    #r-attachments { display: flex; flex-direction: column; gap: 8px; }
+
+    /* ── 審核面板 ── */
+    #r-review-panel { min-height: 80px; }
+
+    /* ── 狀態 badge ── */
+    .status-badge {
+      display: inline-block;
+      padding: 4px 14px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .badge-pending  { background: #fefcbf; color: #975a16; }
+    .badge-approved { background: #c6f6d5; color: #276749; }
+    .badge-rejected { background: #fed7d7; color: #c53030; }
+  </style>
+</head>
+<body>
+
+<!-- 頂部導覽列 -->
+<header class="topbar">
+  <div class="topbar-title">銘勁汽車</div>
+  <div class="topbar-sub">自媒體素材審核 — 詳情</div>
+  <div class="topbar-spacer"></div>
+  <div class="user-badge">
+    <span>👤</span>
+    <span id="user-display">載入中…</span>
+  </div>
+</header>
+
+<div class="page-wrap" id="main-content">
+
+  <!-- 申請基本資訊 -->
+  <div class="card">
+    <div class="card-title" style="display:flex;justify-content:space-between;align-items:center;">
+      <span>📋 申請內容</span>
+      <span id="r-item-id" style="font-size:13px;color:var(--sub);font-weight:400;">—</span>
+    </div>
+    <div class="info-grid">
+      <span class="info-label">貼文標題</span>
+      <span class="info-value" id="r-title">—</span>
+
+      <span class="info-label">申請人</span>
+      <span class="info-value" id="r-applicant">—</span>
+
+      <span class="info-label">據點</span>
+      <span class="info-value" id="r-location">—</span>
+
+      <span class="info-label">發布平台</span>
+      <span class="info-value" id="r-platform">—</span>
+
+      <span class="info-label">預計發布日</span>
+      <span class="info-value" id="r-post-date">—</span>
+
+      <span class="info-label">說明文字</span>
+      <span class="info-value caption" id="r-caption">—</span>
+
+      <span class="info-label">送出時間</span>
+      <span class="info-value" id="r-submitted-at">—</span>
+    </div>
+  </div>
+
+  <!-- 四階段進度條 -->
+  <div class="card">
+    <div class="card-title">📊 審核進度</div>
+    <div id="r-tracker"></div>
+  </div>
+
+  <!-- 媒體素材 -->
+  <div class="card">
+    <div class="card-title">🖼️ 附件素材</div>
+
+    <div class="media-row">
+      <div class="media-label">照片</div>
+      <div id="r-photos"><span style="color:var(--sub);font-size:13px;">（無）</span></div>
+    </div>
+
+    <div class="media-row">
+      <div class="media-label">影片</div>
+      <div id="r-videos"><span style="color:var(--sub);font-size:13px;">（無）</span></div>
+    </div>
+
+    <div class="media-row">
+      <div class="media-label">其他附件</div>
+      <div id="r-attachments"><span style="color:var(--sub);font-size:13px;">（無）</span></div>
+    </div>
+  </div>
+
+  <!-- 審核人員列表 -->
+  <div class="card">
+    <div class="card-title">👥 審核人員</div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">
+      <div style="background:var(--bg);border:1.5px solid var(--border);border-radius:8px;padding:12px 14px;">
+        <div style="font-size:11px;color:var(--sub);font-weight:600;margin-bottom:4px;">第二關 — 所長</div>
+        <div id="r2-name" style="font-size:14px;font-weight:700;">—</div>
+        <div id="r2-email" style="font-size:11px;color:var(--sub);margin-top:2px;">—</div>
+      </div>
+      <div style="background:var(--bg);border:1.5px solid var(--border);border-radius:8px;padding:12px 14px;">
+        <div style="font-size:11px;color:var(--sub);font-weight:600;margin-bottom:4px;">第三關 — 行銷</div>
+        <div id="r3-name" style="font-size:14px;font-weight:700;">—</div>
+        <div id="r3-email" style="font-size:11px;color:var(--sub);margin-top:2px;">—</div>
+      </div>
+      <div style="background:var(--bg);border:1.5px solid var(--border);border-radius:8px;padding:12px 14px;">
+        <div style="font-size:11px;color:var(--sub);font-weight:600;margin-bottom:4px;">第四關 — 部長</div>
+        <div id="r4-name" style="font-size:14px;font-weight:700;">—</div>
+        <div id="r4-email" style="font-size:11px;color:var(--sub);margin-top:2px;">—</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 審核面板（核准 / 退回 / 唯讀） -->
+  <div class="card">
+    <div class="card-title">✍️ 本關審核</div>
+    <div id="r-review-panel">
+      <p style="color:var(--sub);font-size:14px;">載入中…</p>
+    </div>
+  </div>
+
+</div><!-- /.page-wrap -->
+
+<!-- review.js（ES module） -->
+<script type="module" src="review.js"></script>
+
+<!-- topbar 使用者名稱 -->
+<script type="module">
+  import { getCurrentUser } from '../shared/auth.js';
+  const update = () => {
+    const u = getCurrentUser();
+    if (u) document.getElementById('user-display').textContent = u.name;
+    else setTimeout(update, 500);
+  };
+  update();
+</script>
+
+</body>
+</html>
