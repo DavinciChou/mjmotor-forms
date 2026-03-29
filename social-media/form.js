@@ -25,10 +25,10 @@
  *                                    /attachment.pdf
  */
 
-import { loginIfNeeded, getCurrentUser } from '../shared/auth.js?v=4';
-import * as API                          from '../shared/api.js?v=4';
-import * as UI                           from '../shared/ui.js?v=4';
-import { SOCIAL }                        from '../shared/config.js?v=4';
+import { loginIfNeeded, getCurrentUser } from '../shared/auth.js?v=5';
+import * as API                          from '../shared/api.js?v=5';
+import * as UI                           from '../shared/ui.js?v=5';
+import { SOCIAL }                        from '../shared/config.js?v=5';
 
 // ─── 全域狀態 ──────────────────────────────────────────────────────────────────
 let _routeTable  = [];   // 審核路由表（從 Excel 載入）
@@ -86,52 +86,45 @@ function fillApplicantInfo() {
   setText('stage1-person', user.name);
 }
 
-// ─── 廠別 → 路由表據點名稱對映 ──────────────────────────────────────────────
+// ─── 部門 → 路由表據點名稱對映 ──────────────────────────────────────────────
+// 勞工名冊 Column C（部門）可能出現廠或所，統一對映到路由表的據點名稱
 const LOCATION_MAP = {
-  '八德廠':  '銘勁八德所',
-  '中壢廠':  '銘勁中壢所',
-  '桃園廠':  '銘勁桃園所',
+  '銘勁八德廠': '銘勁八德所',
+  '銘勁八德所': '銘勁八德所',
+  '銘勁中壢廠': '銘勁中壢所',
+  '銘勁中壢所': '銘勁中壢所',
+  '銘勁桃園廠': '銘勁桃園所',
+  '銘勁桃園所': '銘勁桃園所',
 };
-// SP List「公司所有人員」欄位名
-const ROSTER_EMAIL_FIELD = '_x64da__x9ede__x4e3b__x7ba1_';
-const ROSTER_LOC_FIELD   = '_x5ee0__x5225_';
 
-// ─── 據點自動帶入（從 SP List「公司所有人員」查詢）────────────────────────────
+// ─── 據點自動帶入（從勞工名冊 Excel 的「勞工名冊」Sheet 查詢）────────────────
 
 async function autoFillLocation() {
   const user = getCurrentUser();
   if (!user) return;
 
   try {
-    const token = await API.getAuthToken();
-    const siteId = API.getSiteId();
-    const listName = encodeURIComponent('公司所有人員');
-    const res = await fetch(
-      `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${listName}/items?$expand=fields&$top=300`,
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
-    if (!res.ok) throw new Error(`[form] 無法讀取公司所有人員清單 (${res.status})`);
-    const data = await res.json();
-    const items = data.value ?? [];
+    // 讀勞工名冊，指定 Sheet 名稱「勞工名冊」
+    const rows = await API.readExcel(SOCIAL.ROSTER_PATH, '勞工名冊');
 
-    // 以 email 比對
-    const myRecord = items.find(i =>
-      String(i.fields?.[ROSTER_EMAIL_FIELD] || '').toLowerCase() === user.email.toLowerCase()
+    // 以姓名比對（名冊無 Email 欄）
+    const myRecord = rows.find(r =>
+      String(r['姓名'] || '').trim() === String(user.name || '').trim()
     );
 
-    const rawLoc = myRecord?.fields?.[ROSTER_LOC_FIELD] || '';
-    const dept   = LOCATION_MAP[rawLoc] || '';
+    const dept     = String(myRecord?.['部門'] || '').trim();
+    const location = LOCATION_MAP[dept] || '';
 
-    if (!dept) {
-      // 自動帶入失敗 → 顯示 dropdown 讓使用者手動選
+    if (!location) {
+      // 部門無法對映到單一據點（如銘勁總經理、銘勁服務部等）→ 讓使用者手動選
       showLocationDropdown();
       return;
     }
 
     // 成功 → 鎖定顯示
-    setAutoField('location-display', dept);
-    setVal('location', dept);
-    applyLocation(dept);
+    setAutoField('location-display', location);
+    setVal('location', location);
+    applyLocation(location);
 
   } catch (err) {
     console.warn('[form] autoFillLocation failed', err);
