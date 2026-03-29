@@ -296,45 +296,61 @@ export async function ensureFolder(folderPath) {
 // ─── 讀取 Excel（審核路由表 / 勞工名冊）────────────────────────────────────────
 
 /**
- * 讀取 SiteAssets 下的 Excel，回傳指定 Sheet 的二維陣列（第一列為標題）
+ * 讀取 SiteAssets 下的 Excel，回傳指定 Sheet 的物件陣列（第一列為標題）
+ *
+ * 實作：直接下載 .xlsx 二進位，用 SheetJS（全域 XLSX）在瀏覽器端解析。
+ * 避免使用 Graph Excel Workbook API（需 WAC token，部分租用戶無法取得）。
+ *
  * @param {string} excelPath  相對於 SiteAssets，例如 '自媒體素材審核/審核路由表.xlsx'
  * @param {string} [sheetName]  Sheet 名稱，預設第一個 Sheet
  * @returns {Promise<object[]>}  每列轉為 { 標題: 值 } 的物件陣列
  */
 export async function readExcel(excelPath, sheetName) {
   requireInit();
-  const token = await getToken();
+
+  // 確保 SheetJS 已載入
+  if (typeof XLSX === 'undefined') {
+    await _loadSheetJS();
+  }
+
+  const token   = await getToken();
   const encoded = excelPath.split('/').map(encodeURIComponent).join('/');
 
-  // 取得 workbook sessions（Graph Excel API）
-  const baseUrl = `${GRAPH_BASE}/drives/${_siteAssetsId}/root:/${encoded}:/workbook`;
+  // 下載 xlsx 二進位（不使用 Workbook API，避免 WAC token 問題）
+  const dlUrl = `${GRAPH_BASE}/drives/${_siteAssetsId}/root:/${encoded}:/content`;
+  const res   = await fetch(dlUrl, { headers: { Authorization: `Bearer ${token}` } });
+  if (!res.ok) throw new Error(`[api] 無法下載 Excel: ${excelPath} (${res.status})`);
 
-  // 取得所有 worksheets
-  const sheetsRes = await fetch(`${baseUrl}/worksheets`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-  if (!sheetsRes.ok) throw new Error(`[api] 無法讀取 Excel: ${excelPath}`);
-  const sheetsData = await sheetsRes.json();
-  const sheet = sheetName
-    ? sheetsData.value.find(s => s.name === sheetName)
-    : sheetsData.value[0];
-  if (!sheet) throw new Error(`[api] 找不到 Sheet: ${sheetName}`);
+  const arrayBuf = await res.arrayBuffer();
+  const workbook = XLSX.read(arrayBuf, { type: 'array' });
 
-  // 讀取 usedRange（含值）
-  const rangeRes = await fetch(
-    `${baseUrl}/worksheets/${encodeURIComponent(sheet.id)}/usedRange(valuesOnly=true)`,
-    { headers: { Authorization: `Bearer ${token}` } }
-  );
-  if (!rangeRes.ok) throw new Error('[api] 無法讀取 usedRange');
-  const rangeData = await rangeRes.json();
+  const targetSheet = sheetName
+    ? workbook.Sheets[sheetName]
+    : workbook.Sheets[workbook.SheetNames[0]];
+  if (!targetSheet) throw new Error(`[api] 找不到 Sheet: ${sheetName}`);
 
-  const rows   = rangeData.values;
+  // header: 1 → 二維陣列；defval: '' → 空格填空字串
+  const rows = XLSX.utils.sheet_to_json(targetSheet, { header: 1, defval: '' });
   if (!rows || rows.length < 2) return [];
+
   const headers = rows[0];
-  return rows.slice(1).map(row => {
-    const obj = {};
-    headers.forEach((h, i) => { obj[h] = row[i] ?? ''; });
-    return obj;
+  return rows.slice(1)
+    .filter(row => row.some(v => v !== ''))   // 過濾全空列
+    .map(row => {
+      const obj = {};
+      headers.forEach((h, i) => { obj[h] = row[i] ?? ''; });
+      return obj;
+    });
+}
+
+/** 動態載入 SheetJS（如頁面未預先引入） */
+function _loadSheetJS() {
+  return new Promise((resolve, reject) => {
+    const s = document.createElement('script');
+    s.src = 'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';
+    s.onload  = resolve;
+    s.onerror = () => reject(new Error('[api] 無法載入 SheetJS'));
+    document.head.appendChild(s);
   });
 }
 
