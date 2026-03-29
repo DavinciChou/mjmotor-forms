@@ -138,10 +138,11 @@ function renderMedia() {
     if (mediaPaths.attachments?.length) {
       attachWrap.innerHTML = mediaPaths.attachments.map(a => `
         <a href="${a.url}" target="_blank" style="
-          display:flex;align-items:center;gap:8px;padding:10px 14px;
-          background:#f7fafc;border:1px solid #e2e8f0;border-radius:8px;
-          text-decoration:none;color:#2d3748;font-size:13px;">
+          display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 14px;
+          background:#ebf8ff;border:1px solid #bee3f8;border-radius:8px;
+          text-decoration:none;color:#2b6cb0;font-size:13px;font-weight:500;">
           📎 ${a.name}
+          <span style="font-size:11px;color:#4299e1;flex-shrink:0;">點擊開啟 ↗</span>
         </a>`).join('');
     } else {
       attachWrap.innerHTML = `<span style="color:#718096;font-size:13px;">（無）</span>`;
