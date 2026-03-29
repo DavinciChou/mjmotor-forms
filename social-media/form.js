@@ -1,4 +1,4 @@
-﻿/**
+/**
  * social-media/form.js — 自媒體素材審核申請表單（申請人端）
  *
  * 職責：
@@ -540,8 +540,6 @@ async function showDetailPanel(itemId) {
     // ③ 附件素材
     renderDetailMedia(fields);
 
-    // ④ 審核狀態
-    renderDetailStatus(fields);
 
     // ⑤ 已退回 → 顯示「重新填寫」按鈕
     const isRejected =
@@ -631,50 +629,6 @@ function renderDetailMedia(fields) {
   }
 }
 
-function renderDetailStatus(fields) {
-  const panel  = document.getElementById('d-review-panel');
-  if (!panel) return;
-  const stage  = fields[SOCIAL.FIELD.STAGE]  ?? '';
-  const status = fields[SOCIAL.FIELD.STATUS] ?? '';
-
-  if (status === SOCIAL.STAGE.APPROVED) {
-    panel.innerHTML = `<div style="text-align:center;padding:14px 0;">
-      <div style="font-size:32px;">✅</div>
-      <p style="font-size:14px;font-weight:700;margin-top:8px;color:#38a169;">已核准</p>
-    </div>`;
-    return;
-  }
-  if (status === SOCIAL.STAGE.REJECTED) {
-    panel.innerHTML = `<div style="text-align:center;padding:14px 0;">
-      <div style="font-size:32px;">❌</div>
-      <p style="font-size:14px;font-weight:700;margin-top:8px;color:#e53e3e;">已退回</p>
-      <p style="font-size:12px;color:var(--sub);margin-top:4px;">請點擊「重新填寫」送出新申請。</p>
-    </div>`;
-    return;
-  }
-  const stageLabels = {
-    [SOCIAL.STAGE.STAGE2]: '第一關（所長）',
-    [SOCIAL.STAGE.STAGE3]: '第二關（行銷）',
-    [SOCIAL.STAGE.STAGE4]: '第三關（部長）',
-  };
-  const currentLabel = stageLabels[stage] ?? stage;
-  const reviewerName = {
-    [SOCIAL.STAGE.STAGE2]: fields[SOCIAL.FIELD.REVIEWER2_NAME],
-    [SOCIAL.STAGE.STAGE3]: fields[SOCIAL.FIELD.REVIEWER3_NAME],
-    [SOCIAL.STAGE.STAGE4]: fields[SOCIAL.FIELD.REVIEWER4_NAME],
-  }[stage] ?? '';
-
-  panel.innerHTML = `<div style="text-align:center;padding:12px 0;">
-    <div style="font-size:26px;margin-bottom:8px;">📬</div>
-    <p style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:6px;">
-      等待 ${currentLabel} 審核${reviewerName ? `（${reviewerName}）` : ''}
-    </p>
-    <p style="font-size:12px;color:var(--sub);line-height:1.7;">
-      核准請求已發送至審核人的 <strong>Teams</strong> / <strong>Outlook</strong>，<br>
-      請審核人直接在通知訊息中點擊 Approve 或 Reject。
-    </p>
-  </div>`;
-}
 
 /** 更新 .auto-field div 並移除 loading 狀態 */
 function setAutoField(id, text, smallFont = false) {
