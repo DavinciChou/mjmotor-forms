@@ -1,4 +1,4 @@
-/**
+﻿/**
  * social-media/form.js — 自媒體素材審核申請表單（申請人端）
  *
  * 職責：
@@ -27,7 +27,7 @@
 
 import { loginIfNeeded, getCurrentUser } from '../shared/auth.js?v=10';
 import * as API                          from '../shared/api.js?v=10';
-import * as UI                           from '../shared/ui.js?v=10';
+import * as UI                           from '../shared/ui.js?v=11';
 import { SOCIAL }                        from '../shared/config.js?v=10';
 
 // ─── 全域狀態 ──────────────────────────────────────────────────────────────────
@@ -259,7 +259,7 @@ function renderFileList(type) {
   list.innerHTML = store.map((f, i) => `
     <div style="display:flex;align-items:center;gap:8px;padding:5px 8px;
       background:#f7fafc;border-radius:5px;font-size:12px;">
-      <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${f.name}</span>
+      <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${f.name}</span>
       <span style="color:#718096;font-size:11px;">${formatBytes(f.size)}</span>
       <button data-remove="${i}" style="
         border:none;background:none;color:#e53e3e;cursor:pointer;
@@ -445,7 +445,12 @@ function showConfirmScreen(itemId) {
 
   const tracker = document.getElementById('confirm-tracker');
   if (tracker) {
-    UI.renderTracker(tracker, SOCIAL.STAGE.STAGE2, SOCIAL.STAGE.PENDING);
+    UI.renderTracker(tracker, SOCIAL.STAGE.STAGE2, SOCIAL.STAGE.PENDING, {}, {
+      applicant: getVal('applicant-name'),
+      reviewer2: getVal('reviewer2-name-val'),
+      reviewer3: getVal('reviewer3-name-val'),
+      reviewer4: getVal('reviewer4-name-val'),
+    });
   }
 }
 

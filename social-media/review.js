@@ -17,10 +17,10 @@
  * PA 僅負責 Email 通知；狀態機更新由此頁面直接 PATCH SP List。
  */
 
-import { loginIfNeeded, getCurrentUser } from '../shared/auth.js?v=9';
-import * as API                          from '../shared/api.js?v=9';
-import * as UI                           from '../shared/ui.js?v=9';
-import { SOCIAL }                        from '../shared/config.js?v=9';
+import { loginIfNeeded, getCurrentUser } from '../shared/auth.js?v=11';
+import * as API                          from '../shared/api.js?v=11';
+import * as UI                           from '../shared/ui.js?v=11';
+import { SOCIAL }                        from '../shared/config.js?v=11';
 
 // ─── 進入點 ───────────────────────────────────────────────────────────────────
 
