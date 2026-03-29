@@ -330,7 +330,8 @@ const dlUrl = `${GRAPH_BASE}/drives/${_siteAssetsId}/root:/${encoded}:/content`;
 
   const headers = rows[0];
   return rows.slice(1)
-    .filter(row => row.some(v => v !== ''))   // ?蕪?函征??    .map(row => {
+    .filter(row => row.some(v => v !== ''))   // ?蕪?函征??
+    .map(row => {
       const obj = {};
       headers.forEach((h, i) => { obj[h] = row[i] ?? ''; });
       return obj;
