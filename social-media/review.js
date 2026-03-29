@@ -66,19 +66,17 @@ function renderMeta() {
   setText('r-submitted-at',   UI.formatDateTime(_fields[SOCIAL.FIELD.SUBMITTED_AT]));
   setText('r-item-id',        `#${_item.id}`);
 
-
   // Header card
   setText('r-header-title', _fields[SOCIAL.FIELD.TITLE] ?? '—');
-  setText('r-header-id',    "#${_item.id} · 送出於 ${UI.formatDateTime(_fields[SOCIAL.FIELD.SUBMITTED_AT])}");
+  setText('r-header-id',    `#${_item.id} · 送出於 ${UI.formatDateTime(_fields[SOCIAL.FIELD.SUBMITTED_AT])}`);
   const metaEl = document.getElementById('r-header-meta');
   if (metaEl) {
     const ap = _fields[SOCIAL.FIELD.APPLICANT_NAME] ?? '—';
     const lo = _fields[SOCIAL.FIELD.LOCATION]       ?? '—';
     const pl = _fields[SOCIAL.FIELD.PLATFORM]       ?? '—';
     const pd = UI.formatDate(_fields[SOCIAL.FIELD.PUBLISH_DATE]);
-    metaEl.innerHTML = <span>👤 ${ap}</span><span>📍 ${lo}</span><span>🌐 ${pl}</span><span>📅 預計 ${pd} 發布</span>;
+    metaEl.innerHTML = `<span>👤 ${ap}</span><span>📍 ${lo}</span><span>🌐 ${pl}</span><span>📅 預計 ${pd} 發布</span>`;
   }
-
 }
 
 // 進度條（含各關完成時間）
