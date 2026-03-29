@@ -443,6 +443,9 @@ function showConfirmScreen(itemId) {
   const idEl = document.getElementById('confirm-item-id');
   if (idEl) idEl.textContent = `#${itemId}`;
 
+  const reviewLink = document.getElementById('confirm-review-link');
+  if (reviewLink) reviewLink.href = `review.html?id=${itemId}`;
+
   const tracker = document.getElementById('confirm-tracker');
   if (tracker) {
     UI.renderTracker(tracker, SOCIAL.STAGE.STAGE2, SOCIAL.STAGE.PENDING, {}, {
@@ -478,10 +481,4 @@ function setAutoField(id, text, smallFont = false) {
   el.innerHTML = `<span${smallFont ? ' style="font-size:11px;"' : ''}>${text}</span> <span class="lock">🔒</span>`;
 }
 
-/** 設為錯誤狀態（保留 loading 樣式，顯示提示） */
-function setAutoFieldError(id, msg) {
-  const el = document.getElementById(id);
-  if (!el) return;
-  el.classList.add('loading');
-  el.textContent = msg;
-}
+/** 設為�

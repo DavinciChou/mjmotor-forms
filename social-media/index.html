@@ -156,6 +156,8 @@
       text-align: center;
       cursor: pointer;
       transition: background .15s;
+      min-width: 0;
+      overflow: hidden;
     }
     .upload-slot:hover { background: var(--primary-l); }
     .slot-label { font-size: 10px; color: var(--sub); margin-bottom: 3px; }
@@ -368,6 +370,13 @@
           您可以在下方追蹤審核進度。
         </div>
         <div class="confirm-id">申請編號 <span id="confirm-item-id">—</span></div>
+        <div style="margin-top:16px;">
+          <a id="confirm-review-link" href="#"
+            style="display:inline-block;padding:10px 24px;background:#3182ce;color:#fff;
+                   border-radius:8px;text-decoration:none;font-size:14px;font-weight:700;">
+            查看審核進度 →
+          </a>
+        </div>
       </div>
       <div class="card-title" style="margin-top:8px;">審核進度</div>
       <div id="confirm-tracker"></div>
@@ -391,4 +400,4 @@
 </script>
 
 </body>
-</html>
+</htm
