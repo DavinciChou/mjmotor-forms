@@ -53,7 +53,6 @@ function renderPage() {
   renderMeta();
   renderTracker();
   renderMedia();
-  renderReviewPanel();
 }
 
 // 申請資訊區
@@ -152,61 +151,6 @@ function renderMedia() {
 
 // 掛到 window 供 onclick 使用
 window._openLightbox = UI.openLightbox;
-
-// ─── 審核狀態面板（唯讀）────────────────────────────────────────────────────
-
-function renderReviewPanel() {
-  const panel = document.getElementById('r-review-panel');
-  if (!panel) return;
-
-  const stage  = _fields[SOCIAL.FIELD.STAGE]  ?? '';
-  const status = _fields[SOCIAL.FIELD.STATUS] ?? '';
-
-  // 已結案
-  if (status === SOCIAL.STAGE.APPROVED) {
-    panel.innerHTML = `
-      <div style="text-align:center;padding:20px 0;">
-        <div style="font-size:42px;">✅</div>
-        <p style="font-size:17px;font-weight:700;margin-top:10px;color:#38a169;">已核准</p>
-      </div>`;
-    return;
-  }
-  if (status === SOCIAL.STAGE.REJECTED) {
-    panel.innerHTML = `
-      <div style="text-align:center;padding:20px 0;">
-        <div style="font-size:42px;">❌</div>
-        <p style="font-size:17px;font-weight:700;margin-top:10px;color:#e53e3e;">已退回</p>
-      </div>`;
-    return;
-  }
-
-  // 審核進行中 — 顯示等待說明
-  const stageLabels = {
-    [SOCIAL.STAGE.STAGE2]: '第一關（所長）',
-    [SOCIAL.STAGE.STAGE3]: '第二關（行銷）',
-    [SOCIAL.STAGE.STAGE4]: '第三關（部長）',
-  };
-  const currentLabel = stageLabels[stage] ?? stage;
-  const reviewerName = {
-    [SOCIAL.STAGE.STAGE2]: _fields[SOCIAL.FIELD.REVIEWER2_NAME],
-    [SOCIAL.STAGE.STAGE3]: _fields[SOCIAL.FIELD.REVIEWER3_NAME],
-    [SOCIAL.STAGE.STAGE4]: _fields[SOCIAL.FIELD.REVIEWER4_NAME],
-  }[stage] ?? '';
-
-  panel.innerHTML = `
-    <div style="text-align:center;padding:16px 0 8px;">
-      <div style="font-size:36px;margin-bottom:12px;">📬</div>
-      <p style="font-size:15px;font-weight:700;color:#2d3748;margin-bottom:8px;">
-        等待 ${currentLabel} 審核${reviewerName ? `（${reviewerName}）` : ''}
-      </p>
-      <p style="font-size:13px;color:#718096;line-height:1.8;">
-        核准請求已發送至審核人的
-        <strong style="color:#2d3748;">Teams</strong> /
-        <strong style="color:#2d3748;">Outlook</strong>，<br>
-        請審核人直接在通知訊息中點擊 <strong>Approve</strong> 或 <strong>Reject</strong>。
-      </p>
-    </div>`;
-}
 
 // ─── 工具函式 ─────────────────────────────────────────────────────────────────
 
