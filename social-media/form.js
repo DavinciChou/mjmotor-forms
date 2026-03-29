@@ -25,10 +25,10 @@
  *                                    /attachment.pdf
  */
 
-import { loginIfNeeded, getCurrentUser } from '../shared/auth.js?v=9';
-import * as API                          from '../shared/api.js?v=9';
-import * as UI                           from '../shared/ui.js?v=9';
-import { SOCIAL }                        from '../shared/config.js?v=9';
+import { loginIfNeeded, getCurrentUser } from '../shared/auth.js?v=10';
+import * as API                          from '../shared/api.js?v=10';
+import * as UI                           from '../shared/ui.js?v=10';
+import { SOCIAL }                        from '../shared/config.js?v=10';
 
 // ─── 全域狀態 ──────────────────────────────────────────────────────────────────
 let _routeTable  = [];   // 審核路由表（從 Excel 載入）
@@ -112,11 +112,19 @@ async function autoFillLocation() {
       String(r['姓名'] || '').trim() === String(user.name || '').trim()
     );
 
-    const dept     = String(myRecord?.['部門'] || '').trim();
-    const location = LOCATION_MAP[dept] || '';
+    const dept = String(myRecord?.['部門'] || '').trim();
+
+    // 1. 先查 LOCATION_MAP（廠 / 所 名稱正規化）
+    let location = LOCATION_MAP[dept] || '';
+
+    // 2. LOCATION_MAP 沒有對應時，直接用部門名稱去路由表查
+    //    （例如「銘勁總經理」部門在路由表有專屬一行）
+    if (!location && _routeTable.find(r => r['據點'] === dept)) {
+      location = dept;
+    }
 
     if (!location) {
-      // 部門無法對映到單一據點（如銘勁總經理、銘勁服務部等）→ 讓使用者手動選
+      // 路由表也找不到 → fallback 手動下拉
       showLocationDropdown();
       return;
     }
