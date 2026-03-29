@@ -66,7 +66,8 @@ export async function initSite() {
 
   // 2. ?? SiteAssets drive ID
   // 瘜冽?嚗P 銝?SiteAssets ??list ?迂??"Site Assets"嚗蝛箸嚗?
-  // 銝???曉 /drives 皜銝哨?敹??湔??lists/Site%20Assets/drive 摮???  const siteAssetsData = await graphGet(
+  // 銝???曉 /drives 皜銝哨?敹??湔??lists/Site%20Assets/drive 摮???
+  const siteAssetsData = await graphGet(
     `${GRAPH_BASE}/sites/${_siteId}/lists/Site%20Assets/drive`
   );
   if (!siteAssetsData?.id) throw new Error('[api] ?曆???SiteAssets library');
