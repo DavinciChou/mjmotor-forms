@@ -81,6 +81,12 @@ function requireInit() {
   if (!_siteId) throw new Error('[api] 請先呼叫 initSite()');
 }
 
+/** 供外部模組取得已快取的 siteId */
+export function getSiteId() { requireInit(); return _siteId; }
+
+/** 供外部模組直接取得 Graph auth token */
+export async function getAuthToken() { return getToken(); }
+
 // ─── SharePoint List CRUD ─────────────────────────────────────────────────────
 
 /**

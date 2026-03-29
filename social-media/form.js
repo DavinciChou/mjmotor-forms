@@ -86,46 +86,70 @@ function fillApplicantInfo() {
   setText('stage1-person', user.name);
 }
 
-// ─── 據點自動帶入（依勞工名冊 Column C）─────────────────────────────────────
+// ─── 廠別 → 路由表據點名稱對映 ──────────────────────────────────────────────
+const LOCATION_MAP = {
+  '八德廠':  '銘勁八德所',
+  '中壢廠':  '銘勁中壢所',
+  '桃園廠':  '銘勁桃園所',
+};
+// SP List「公司所有人員」欄位名
+const ROSTER_EMAIL_FIELD = '_x64da__x9ede__x4e3b__x7ba1_';
+const ROSTER_LOC_FIELD   = '_x5ee0__x5225_';
+
+// ─── 據點自動帶入（從 SP List「公司所有人員」查詢）────────────────────────────
 
 async function autoFillLocation() {
   const user = getCurrentUser();
   if (!user) return;
 
   try {
-    const rows = await API.readExcel(SOCIAL.ROSTER_PATH);
-    if (!rows?.length) return;
-
-    // 以 email 比對找出該員工所屬列（不分大小寫）
-    const userRow = rows.find(r =>
-      Object.values(r).some(v =>
-        String(v || '').toLowerCase() === user.email.toLowerCase()
-      )
+    const token = await API.getAuthToken();
+    const siteId = API.getSiteId();
+    const listName = encodeURIComponent('公司所有人員');
+    const res = await fetch(
+      `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${listName}/items?$expand=fields&$top=300`,
+      { headers: { Authorization: `Bearer ${token}` } }
     );
-    if (!userRow) {
-      setAutoFieldError('location-display', '找不到據點');
-      return;
-    }
+    if (!res.ok) throw new Error(`[form] 無法讀取公司所有人員清單 (${res.status})`);
+    const data = await res.json();
+    const items = data.value ?? [];
 
-    // Column C = 第三欄 = 部門（據點）
-    const keys = Object.keys(userRow);
-    const dept  = keys[2] ? String(userRow[keys[2]] || '').trim() : '';
+    // 以 email 比對
+    const myRecord = items.find(i =>
+      String(i.fields?.[ROSTER_EMAIL_FIELD] || '').toLowerCase() === user.email.toLowerCase()
+    );
+
+    const rawLoc = myRecord?.fields?.[ROSTER_LOC_FIELD] || '';
+    const dept   = LOCATION_MAP[rawLoc] || '';
+
     if (!dept) {
-      setAutoFieldError('location-display', '據點欄位空白');
+      // 自動帶入失敗 → 顯示 dropdown 讓使用者手動選
+      showLocationDropdown();
       return;
     }
 
-    // 更新顯示與隱藏 input
+    // 成功 → 鎖定顯示
     setAutoField('location-display', dept);
     setVal('location', dept);
-
-    // 帶出三關審核人
     applyLocation(dept);
 
   } catch (err) {
     console.warn('[form] autoFillLocation failed', err);
-    setAutoFieldError('location-display', '無法自動帶入');
+    showLocationDropdown();
   }
+}
+
+/** 自動帶入失敗時，隱藏 auto-field，顯示手動 dropdown */
+function showLocationDropdown() {
+  const display = document.getElementById('location-display');
+  const select  = document.getElementById('location-select');
+  if (display) display.style.display = 'none';
+  if (select)  select.style.display  = 'block';
+  select?.addEventListener('change', e => {
+    setVal('location', e.target.value);
+    if (e.target.value) applyLocation(e.target.value);
+    else clearReviewers();
+  });
 }
 
 // ─── 根據據點帶出三關審核人 ───────────────────────────────────────────────────

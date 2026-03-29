@@ -249,8 +249,14 @@
           <input type="hidden" id="applicant-email" />
         </div>
         <div class="field-row">
-          <label>據點</label>
+          <label>據點 <span class="required">*</span></label>
           <div class="auto-field loading" id="location-display">載入中… <span class="lock">🔒</span></div>
+          <select id="location-select" style="display:none;">
+            <option value="">請選擇據點</option>
+            <option value="銘勁八德所">銘勁八德所</option>
+            <option value="銘勁中壢所">銘勁中壢所</option>
+            <option value="銘勁桃園所">銘勁桃園所</option>
+          </select>
           <input type="hidden" id="location" />
         </div>
       </div>
