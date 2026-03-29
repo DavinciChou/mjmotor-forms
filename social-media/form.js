@@ -7,7 +7,7 @@
  *  3. 驗證 → 上傳媒體（照片/影片/附件）→ 寫入 SP List → 確認畫面
  *
  * 審核路由表格式（審核路由表.xlsx，Sheet1）：
- *   | 據點       | 所長姓名 | 所長Email | 行銷姓名 | 行銷Email | 部長姓名 | 部長Email |
+ *   | 據點       | 所長 | 所長信箱 | 行銷 | 行銷信箱 | 部長 | 部長信箱 |
  *
  * 媒體命名規則：
  *   照片  → p1.{ext} / p2.{ext}（最多 2 張）
@@ -120,9 +120,9 @@ function onLocationChange(e) {
   }
 
   // 同時更新顯示用的 div 和隱藏 input（供 collectFields 讀取）
-  setReviewer(2, row['所長姓名'] || '', row['所長Email'] || '');
-  setReviewer(3, row['行銷姓名'] || '', row['行銷Email'] || '');
-  setReviewer(4, row['部長姓名'] || '', row['部長Email'] || '');
+  setReviewer(2, row['所長'] || '', row['所長信箱'] || '');
+  setReviewer(3, row['行銷'] || '', row['行銷信箱'] || '');
+  setReviewer(4, row['部長'] || '', row['部長信箱'] || '');
 }
 
 function setReviewer(n, name, email) {

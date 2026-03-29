@@ -38,7 +38,7 @@ export const SOCIAL = {
   ROUTE_TABLE_PATH: '自媒體素材審核/審核路由表.xlsx',
 
   /** 勞工名冊 Excel（相對於 SiteAssets/，全表單共用） */
-  ROSTER_PATH: '人員資料/勞工名冊.xlsx',
+  ROSTER_PATH: 'mjmotor-forms/_config/勞工名冊.xlsx',
 
   /** 支援的照片副檔名（轉小寫後比對） */
   PHOTO_EXTS: ['jpg', 'jpeg', 'png', 'gif', 'webp', 'heic', 'heif'],
