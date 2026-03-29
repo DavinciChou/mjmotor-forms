@@ -202,9 +202,23 @@ function renderReviewPanel() {
 
 function detectRole(email) {
   const e = email.toLowerCase();
-  if (e === (_fields[SOCIAL.FIELD.REVIEWER2_EMAIL] ?? '').toLowerCase()) return 'reviewer2';
-  if (e === (_fields[SOCIAL.FIELD.REVIEWER3_EMAIL] ?? '').toLowerCase()) return 'reviewer3';
-  if (e === (_fields[SOCIAL.FIELD.REVIEWER4_EMAIL] ?? '').toLowerCase()) return 'reviewer4';
+  const emailMap = {
+    reviewer2: (_fields[SOCIAL.FIELD.REVIEWER2_EMAIL] ?? '').toLowerCase(),
+    reviewer3: (_fields[SOCIAL.FIELD.REVIEWER3_EMAIL] ?? '').toLowerCase(),
+    reviewer4: (_fields[SOCIAL.FIELD.REVIEWER4_EMAIL] ?? '').toLowerCase(),
+  };
+  // 優先比對當前 stage 對應的 reviewer（處理同一人擔任多關的情況）
+  const stageRoleMap = {
+    [SOCIAL.STAGE.STAGE2]: 'reviewer2',
+    [SOCIAL.STAGE.STAGE3]: 'reviewer3',
+    [SOCIAL.STAGE.STAGE4]: 'reviewer4',
+  };
+  const currentRole = stageRoleMap[_fields[SOCIAL.FIELD.STAGE] ?? ''];
+  if (currentRole && emailMap[currentRole] === e) return currentRole;
+  // 依序 fallback
+  if (e === emailMap.reviewer2) return 'reviewer2';
+  if (e === emailMap.reviewer3) return 'reviewer3';
+  if (e === emailMap.reviewer4) return 'reviewer4';
   return null;
 }
 
