@@ -25,7 +25,7 @@
  *                                    /attachment.pdf
  */
 
-import { loginIfNeeded, getCurrentUser } from '../shared/auth.js?v=10';
+import { loginIfNeeded, getCurrentUser } from '../shared/auth.js?v=12';
 import * as API                          from '../shared/api.js?v=13';
 import * as UI                           from '../shared/ui.js?v=11';
 import { SOCIAL }                        from '../shared/config.js?v=10';
@@ -478,6 +478,191 @@ function setText(id, text) {
   if (el) el.textContent = text;
 }
 
+// ─── 詳情唯讀面板 ────────────────────────────────────────────────────────────
+
+/** 掛到 window，供 HTML onclick 使用 */
+window._showDetail   = showDetailPanel;
+window._backToForm   = hideDetailPanel;
+window._openLightbox = UI.openLightbox;
+
+/**
+ * 點擊紀錄後：隱藏表單、顯示詳情面板
+ * @param {number|string} itemId
+ */
+async function showDetailPanel(itemId) {
+  UI.showLoading('載入申請內容…');
+  try {
+    const item   = await API.getItem(SOCIAL.LIST_NAME, itemId);
+    const fields = item.fields || {};
+
+    // ① 申請內容
+    setDetailText('d-item-id',      `#${item.id}`);
+    setDetailText('d-title',        fields[SOCIAL.FIELD.TITLE]          ?? '—');
+    setDetailText('d-applicant',    fields[SOCIAL.FIELD.APPLICANT_NAME] ?? '—');
+    setDetailText('d-location',     fields[SOCIAL.FIELD.LOCATION]       ?? '—');
+    setDetailText('d-platform',     fields[SOCIAL.FIELD.PLATFORM]       ?? '—');
+    setDetailText('d-post-date',    UI.formatDate(fields[SOCIAL.FIELD.PUBLISH_DATE]));
+    setDetailText('d-caption',      fields[SOCIAL.FIELD.CONTENT]        ?? '—');
+    setDetailText('d-submitted-at', UI.formatDateTime(fields[SOCIAL.FIELD.SUBMITTED_AT]));
+
+    // ② 審核進度條
+    UI.renderTracker(
+      'd-tracker',
+      fields[SOCIAL.FIELD.STAGE]  ?? '',
+      fields[SOCIAL.FIELD.STATUS] ?? '',
+      {
+        submit: fields[SOCIAL.FIELD.SUBMITTED_AT],
+        stage2: fields[SOCIAL.FIELD.REVIEWED_AT2],
+        stage3: fields[SOCIAL.FIELD.REVIEWED_AT3],
+        stage4: fields[SOCIAL.FIELD.REVIEWED_AT4] || fields[SOCIAL.FIELD.APPROVED_AT],
+      },
+      {
+        applicant: fields[SOCIAL.FIELD.APPLICANT_NAME] ?? '',
+        reviewer2: fields[SOCIAL.FIELD.REVIEWER2_NAME] ?? '',
+        reviewer3: fields[SOCIAL.FIELD.REVIEWER3_NAME] ?? '',
+        reviewer4: fields[SOCIAL.FIELD.REVIEWER4_NAME] ?? '',
+      }
+    );
+
+    // ③ 附件素材
+    renderDetailMedia(fields);
+
+    // ④ 審核狀態
+    renderDetailStatus(fields);
+
+    // ⑤ 已退回 → 顯示「重新填寫」按鈕
+    const isRejected =
+      fields[SOCIAL.FIELD.STATUS] === SOCIAL.STAGE.REJECTED ||
+      fields[SOCIAL.FIELD.STAGE]  === SOCIAL.STAGE.REJECTED;
+    const resubmitBtn = document.getElementById('detail-resubmit-btn');
+    if (resubmitBtn) resubmitBtn.style.display = isRejected ? 'inline-block' : 'none';
+
+    // 切換顯示
+    document.getElementById('form-section').style.display    = 'none';
+    document.getElementById('confirm-section').style.display = 'none';
+    document.getElementById('detail-section').style.display  = '';
+
+    UI.hideLoading();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  } catch (err) {
+    UI.hideLoading();
+    UI.showError(`載入失敗：${err.message}`);
+    console.error('[detail] error', err);
+  }
+}
+
+/** 返回新申請表單 */
+function hideDetailPanel() {
+  document.getElementById('detail-section').style.display  = 'none';
+  document.getElementById('form-section').style.display    = '';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function setDetailText(id, text) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = text;
+}
+
+function renderDetailMedia(fields) {
+  // 照片 + 附件（MEDIA_PATHS JSON）
+  const rawMedia = fields[SOCIAL.FIELD.MEDIA_PATHS];
+  let mediaPaths = {};
+  try { if (rawMedia) mediaPaths = JSON.parse(rawMedia); } catch { /* ignore */ }
+
+  const photoWrap = document.getElementById('d-photos');
+  if (photoWrap) {
+    if (mediaPaths.photos?.length) {
+      photoWrap.innerHTML = mediaPaths.photos.map(p => `
+        <div style="cursor:zoom-in;" onclick="window._openLightbox?.('${p.url}','${p.name}')">
+          <img src="${p.url}" alt="${p.name}" style="
+            width:90px;height:68px;object-fit:cover;border-radius:6px;
+            border:1.5px solid var(--border);" />
+        </div>`).join('');
+    } else {
+      photoWrap.innerHTML = `<span style="color:var(--sub);font-size:13px;">（無）</span>`;
+    }
+  }
+
+  // 影片（VIDEO_PATHS JSON）
+  const rawVideo = fields[SOCIAL.FIELD.VIDEO_PATHS];
+  let videoPaths = [];
+  try { if (rawVideo) videoPaths = JSON.parse(rawVideo); } catch { /* ignore */ }
+
+  const videoWrap = document.getElementById('d-videos');
+  if (videoWrap) {
+    if (videoPaths.length) {
+      videoWrap.innerHTML = videoPaths.map(v => `
+        <div style="margin-bottom:6px;">
+          <video src="${v.url}" controls style="max-width:100%;border-radius:6px;border:1.5px solid var(--border);"></video>
+          <p style="font-size:11px;color:var(--sub);margin-top:3px;">${v.name}</p>
+        </div>`).join('');
+    } else {
+      videoWrap.innerHTML = `<span style="color:var(--sub);font-size:13px;">（無）</span>`;
+    }
+  }
+
+  // 附件
+  const attachWrap = document.getElementById('d-attachments');
+  if (attachWrap) {
+    if (mediaPaths.attachments?.length) {
+      attachWrap.innerHTML = mediaPaths.attachments.map(a => `
+        <a href="${a.url}" target="_blank" style="
+          display:flex;align-items:center;gap:6px;padding:7px 10px;margin-bottom:6px;
+          background:var(--bg);border:1px solid var(--border);border-radius:6px;
+          text-decoration:none;color:var(--text);font-size:12px;">
+          📎 ${a.name}
+        </a>`).join('');
+    } else {
+      attachWrap.innerHTML = `<span style="color:var(--sub);font-size:13px;">（無）</span>`;
+    }
+  }
+}
+
+function renderDetailStatus(fields) {
+  const panel  = document.getElementById('d-review-panel');
+  if (!panel) return;
+  const stage  = fields[SOCIAL.FIELD.STAGE]  ?? '';
+  const status = fields[SOCIAL.FIELD.STATUS] ?? '';
+
+  if (status === SOCIAL.STAGE.APPROVED) {
+    panel.innerHTML = `<div style="text-align:center;padding:14px 0;">
+      <div style="font-size:32px;">✅</div>
+      <p style="font-size:14px;font-weight:700;margin-top:8px;color:#38a169;">已核准</p>
+    </div>`;
+    return;
+  }
+  if (status === SOCIAL.STAGE.REJECTED) {
+    panel.innerHTML = `<div style="text-align:center;padding:14px 0;">
+      <div style="font-size:32px;">❌</div>
+      <p style="font-size:14px;font-weight:700;margin-top:8px;color:#e53e3e;">已退回</p>
+      <p style="font-size:12px;color:var(--sub);margin-top:4px;">請點擊「重新填寫」送出新申請。</p>
+    </div>`;
+    return;
+  }
+  const stageLabels = {
+    [SOCIAL.STAGE.STAGE2]: '第一關（所長）',
+    [SOCIAL.STAGE.STAGE3]: '第二關（行銷）',
+    [SOCIAL.STAGE.STAGE4]: '第三關（部長）',
+  };
+  const currentLabel = stageLabels[stage] ?? stage;
+  const reviewerName = {
+    [SOCIAL.STAGE.STAGE2]: fields[SOCIAL.FIELD.REVIEWER2_NAME],
+    [SOCIAL.STAGE.STAGE3]: fields[SOCIAL.FIELD.REVIEWER3_NAME],
+    [SOCIAL.STAGE.STAGE4]: fields[SOCIAL.FIELD.REVIEWER4_NAME],
+  }[stage] ?? '';
+
+  panel.innerHTML = `<div style="text-align:center;padding:12px 0;">
+    <div style="font-size:26px;margin-bottom:8px;">📬</div>
+    <p style="font-size:13px;font-weight:700;color:var(--text);margin-bottom:6px;">
+      等待 ${currentLabel} 審核${reviewerName ? `（${reviewerName}）` : ''}
+    </p>
+    <p style="font-size:12px;color:var(--sub);line-height:1.7;">
+      核准請求已發送至審核人的 <strong>Teams</strong> / <strong>Outlook</strong>，<br>
+      請審核人直接在通知訊息中點擊 Approve 或 Reject。
+    </p>
+  </div>`;
+}
+
 /** 更新 .auto-field div 並移除 loading 狀態 */
 function setAutoField(id, text, smallFont = false) {
   const el = document.getElementById(id);
@@ -504,7 +689,7 @@ async function loadMyApplications() {
   card.style.display = '';
 
   try {
-    const { getCurrentUser } = await import('../shared/auth.js?v=11');
+    const { getCurrentUser } = await import('../shared/auth.js?v=12');
     const user = getCurrentUser();
     if (!user?.email) return;          // 尚未登入則跳過
 
@@ -561,7 +746,7 @@ async function loadMyApplications() {
       }
 
       return `
-        <a class="my-app-item" href="review.html?id=${item.id}">
+        <div class="my-app-item" role="button" tabindex="0" onclick="window._showDetail(${item.id})">
           <div class="my-app-dot ${dotClass}"></div>
           <div class="my-app-body">
             <div class="my-app-title">${title}</div>
@@ -574,7 +759,7 @@ async function loadMyApplications() {
           </div>
           <span class="app-badge ${badgeClass}">${badgeText}</span>
           <span class="my-app-arrow">›</span>
-        </a>`;
+        </div>`;
     }).join('');
 
     // 捲動偵測：捲到底移除漸層遮罩
