@@ -67,6 +67,18 @@ function renderMeta() {
   setText('r-item-id',        `#${_item.id}`);
 
 
+  // Header card
+  setText('r-header-title', _fields[SOCIAL.FIELD.TITLE] ?? '—');
+  setText('r-header-id',    "#${_item.id} · 送出於 ${UI.formatDateTime(_fields[SOCIAL.FIELD.SUBMITTED_AT])}");
+  const metaEl = document.getElementById('r-header-meta');
+  if (metaEl) {
+    const ap = _fields[SOCIAL.FIELD.APPLICANT_NAME] ?? '—';
+    const lo = _fields[SOCIAL.FIELD.LOCATION]       ?? '—';
+    const pl = _fields[SOCIAL.FIELD.PLATFORM]       ?? '—';
+    const pd = UI.formatDate(_fields[SOCIAL.FIELD.PUBLISH_DATE]);
+    metaEl.innerHTML = <span>👤 ${ap}</span><span>📍 ${lo}</span><span>🌐 ${pl}</span><span>📅 預計 ${pd} 發布</span>;
+  }
+
 }
 
 // 進度條（含各關完成時間）
@@ -88,6 +100,14 @@ function renderTracker() {
       reviewer4: _fields[SOCIAL.FIELD.REVIEWER4_NAME] ?? '',
     }
   );
+  // Header status badge
+  const badgeEl = document.getElementById('r-header-status');
+  if (badgeEl) {
+    const st = _fields[SOCIAL.FIELD.STATUS] ?? '';
+    if (st === SOCIAL.STAGE.APPROVED) { badgeEl.textContent = '✅ 已核准'; badgeEl.className = 'status-badge badge-approved'; }
+    else if (st === SOCIAL.STAGE.REJECTED) { badgeEl.textContent = '❌ 已退回'; badgeEl.className = 'status-badge badge-rejected'; }
+    else { badgeEl.textContent = '🕐 審核中'; badgeEl.className = 'status-badge badge-pending'; }
+  }
 }
 
 // 媒體預覽
