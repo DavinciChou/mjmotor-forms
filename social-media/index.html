@@ -318,12 +318,6 @@
       font-family:inherit; transition:opacity .15s;
     }
     .d-resubmit-btn:hover { opacity:.85; }
-    .d-info-grid { display:grid; grid-template-columns:100px 1fr; gap:8px 14px; font-size:13px; }
-    .d-label { color:var(--sub); font-weight:600; align-self:start; padding-top:1px; }
-    .d-value { color:var(--text); word-break:break-word; }
-    .d-value.caption { white-space:pre-wrap; background:var(--bg); border-radius:5px; padding:6px 8px; }
-    .d-media-label { font-size:12px; font-weight:600; color:var(--sub); margin-bottom:6px; }
-    .d-photos-row { display:flex; flex-wrap:wrap; gap:8px; }
 
     /* Skeleton loading */
     .my-app-skel {
@@ -501,54 +495,6 @@
     </div>
   </div>
 
-  <!-- 詳情唯讀面板 -->
-  <div id="detail-section" style="display:none;">
-    <div class="d-btn-row">
-      <button class="d-back-btn" onclick="window._backToForm()">← 返回新申請</button>
-      <button id="detail-resubmit-btn" class="d-resubmit-btn" style="display:none;" onclick="window._backToForm()">重新填寫</button>
-    </div>
-
-    <!-- 申請內容 -->
-    <div class="card">
-      <div class="card-title" style="display:flex;justify-content:space-between;align-items:center;">
-        <span>📋 申請內容</span>
-        <span id="d-item-id" style="font-size:11px;color:var(--sub);font-weight:400;"></span>
-      </div>
-      <div class="d-info-grid">
-        <span class="d-label">貼文標題</span>  <span class="d-value" id="d-title">—</span>
-        <span class="d-label">申請人</span>    <span class="d-value" id="d-applicant">—</span>
-        <span class="d-label">據點</span>      <span class="d-value" id="d-location">—</span>
-        <span class="d-label">發布平台</span>  <span class="d-value" id="d-platform">—</span>
-        <span class="d-label">預計發布日</span><span class="d-value" id="d-post-date">—</span>
-        <span class="d-label">說明文字</span>  <span class="d-value caption" id="d-caption">—</span>
-        <span class="d-label">送出時間</span>  <span class="d-value" id="d-submitted-at">—</span>
-      </div>
-    </div>
-
-    <!-- 審核進度 -->
-    <div class="card">
-      <div class="card-title">📊 審核進度</div>
-      <div id="d-tracker"></div>
-    </div>
-
-    <!-- 附件素材 -->
-    <div class="card">
-      <div class="card-title">🖼️ 附件素材</div>
-      <div style="margin-bottom:12px;">
-        <div class="d-media-label">照片</div>
-        <div id="d-photos" class="d-photos-row"><span style="color:var(--sub);font-size:13px;">（無）</span></div>
-      </div>
-      <div style="margin-bottom:12px;">
-        <div class="d-media-label">影片</div>
-        <div id="d-videos"><span style="color:var(--sub);font-size:13px;">（無）</span></div>
-      </div>
-      <div>
-        <div class="d-media-label">其他附件</div>
-        <div id="d-attachments"><span style="color:var(--sub);font-size:13px;">（無）</span></div>
-      </div>
-    </div>
-  </div><!-- /#detail-section -->
-
   <!-- 我的申請紀錄 -->
   <div class="card" id="my-apps-card" style="display:none;">
     <div class="card-title">
@@ -569,7 +515,7 @@
 </div><!-- /.page-wrap -->
 
 <!-- form.js（ES module） -->
-<script type="module" src="form.js?v=19"></script>
+<script type="module" src="form.js?v=20"></script>
 
 <!-- topbar 使用者名稱 -->
 <script type="module">
