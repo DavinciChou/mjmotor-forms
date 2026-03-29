@@ -10,7 +10,7 @@
  * 本頁面為唯讀，僅供查看申請狀態，不提供核准 / 退回操作。
  */
 
-import { loginIfNeeded } from '../shared/auth.js?v=11';
+import { loginIfNeeded } from '../shared/auth.js?v=12';
 import * as API                          from '../shared/api.js?v=13';
 import * as UI                           from '../shared/ui.js?v=11';
 import { SOCIAL }                        from '../shared/config.js?v=11';

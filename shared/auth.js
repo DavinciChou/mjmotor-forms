@@ -49,6 +49,15 @@ export async function loginIfNeeded() {
   if (response) {
     _account = response.account;
     instance.setActiveAccount(_account);
+    // 恢復原始 URL（含 ?id 等 query params），解決 review.html?id=N 登入後消失的問題
+    const returnUrl = sessionStorage.getItem('msal_return_url');
+    if (returnUrl) {
+      sessionStorage.removeItem('msal_return_url');
+      if (returnUrl !== window.location.href) {
+        window.location.replace(returnUrl);
+        await new Promise(() => {}); // 停在這裡等待 navigation，不繼續往下執行
+      }
+    }
     return;
   }
 
@@ -60,7 +69,8 @@ export async function loginIfNeeded() {
     return;
   }
 
-  // 沒有帳號 → 跳轉 Microsoft 登入頁
+  // 沒有帳號 → 儲存原始 URL 後跳轉 Microsoft 登入頁
+  sessionStorage.setItem('msal_return_url', window.location.href);
   await instance.loginRedirect({ scopes: GRAPH_SCOPES });
   // loginRedirect 會離開頁面，下方程式不會繼續執行
 }
