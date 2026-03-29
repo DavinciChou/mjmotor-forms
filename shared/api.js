@@ -222,7 +222,8 @@ async function _uploadLarge(remotePath, file, onProgress) {
   if (!sessionRes.ok) throw new Error('[api] ?⊥?撱箇? upload session');
   const { uploadUrl } = await sessionRes.json();
 
-  // ??銝嚗???5 MB嚗?  const chunkSize = 5 * 1024 * 1024;
+  // ??銝嚗???5 MB嚗?
+  const chunkSize = 5 * 1024 * 1024;
   let offset = 0;
   let webUrl  = '';
 
@@ -272,7 +273,8 @@ export async function ensureFolder(folderPath) {
       headers: { Authorization: `Bearer ${token}` },
     });
     if (res.status === 404) {
-      // 撱箇?甇文惜鞈?憭?      const parentEncoded = current.includes('/')
+      // 撱箇?甇文惜鞈?憭?
+      const parentEncoded = current.includes('/')
         ? current.split('/').slice(0, -1).map(encodeURIComponent).join('/')
         : '';
       const parentUrl = parentEncoded
@@ -301,14 +303,16 @@ export async function ensureFolder(folderPath) {
 export async function readExcel(excelPath, sheetName) {
   requireInit();
 
-  // 蝣箔? SheetJS 撌脰???  if (typeof XLSX === 'undefined') {
+  // 蝣箔? SheetJS 撌脰???
+  if (typeof XLSX === 'undefined') {
     await _loadSheetJS();
   }
 
   const token   = await getToken();
   const encoded = excelPath.split('/').map(encodeURIComponent).join('/');
 
-  // 銝? xlsx 鈭脖?嚗?雿輻 Workbook API嚗??WAC token ??嚗?  const dlUrl = `${GRAPH_BASE}/drives/${_siteAssetsId}/root:/${encoded}:/content`;
+  // 銝? xlsx 鈭脖?嚗?雿輻 Workbook API嚗??WAC token ??嚗?  
+const dlUrl = `${GRAPH_BASE}/drives/${_siteAssetsId}/root:/${encoded}:/content`;
   const res   = await fetch(dlUrl, { headers: { Authorization: `Bearer ${token}` } });
   if (!res.ok) throw new Error(`[api] ?⊥?銝? Excel: ${excelPath} (${res.status})`);
 
