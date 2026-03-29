@@ -1,23 +1,16 @@
 ﻿/**
- * social-media/review.js — 自媒體素材審核（審核人端）
+ * social-media/review.js — 自媒體素材審核（查看端）
  *
  * 職責：
  *  1. 從 URL query string 取得 itemId（?id=42）
  *  2. SSO 登入 → 讀取 SP List 項目
- *  3. 渲染：申請內容、媒體預覽、四階段進度條、審核意見輸入
- *  4. 判斷目前登入者是哪一關的審核人
- *  5. 「核准」/ 「退回」按鈕 → PATCH 欄位 → 通知（PA 觸發）
+ *  3. 渲染：申請內容、媒體預覽、四階段進度條
  *
- * 審核狀態機（與 Power Automate 搭配）：
- *   第二階段（所長）核准 → ReviewStage = 第三階段
- *   第三階段（行銷）核准 → ReviewStage = 第四階段
- *   第四階段（部長）核准 → ReviewStage = 已核准  ReviewStatus = 已核准
- *   任何一關退回         → ReviewStatus = 已退回  （PA 通知申請人）
- *
- * PA 僅負責 Email 通知；狀態機更新由此頁面直接 PATCH SP List。
+ * 審核方式：由 Power Automate 透過 Teams / Outlook 核准卡進行。
+ * 本頁面為唯讀，僅供查看申請狀態，不提供核准 / 退回操作。
  */
 
-import { loginIfNeeded, getCurrentUser } from '../shared/auth.js?v=11';
+import { loginIfNeeded } from '../shared/auth.js?v=11';
 import * as API                          from '../shared/api.js?v=11';
 import * as UI                           from '../shared/ui.js?v=11';
 import { SOCIAL }                        from '../shared/config.js?v=11';
@@ -159,205 +152,59 @@ function renderMedia() {
 // 掛到 window 供 onclick 使用
 window._openLightbox = UI.openLightbox;
 
-// ─── 審核面板（核准 / 退回）──────────────────────────────────────────────────
+// ─── 審核狀態面板（唯讀）────────────────────────────────────────────────────
 
 function renderReviewPanel() {
   const panel = document.getElementById('r-review-panel');
   if (!panel) return;
 
-  const user   = getCurrentUser();
   const stage  = _fields[SOCIAL.FIELD.STAGE]  ?? '';
   const status = _fields[SOCIAL.FIELD.STATUS] ?? '';
 
-  // 已結案（核准或退回）→ 顯示唯讀結果
-  if (status === SOCIAL.STAGE.APPROVED || status === SOCIAL.STAGE.REJECTED) {
-    panel.innerHTML = buildReadonlyResult(status);
+  // 已結案
+  if (status === SOCIAL.STAGE.APPROVED) {
+    panel.innerHTML = `
+      <div style="text-align:center;padding:20px 0;">
+        <div style="font-size:42px;">✅</div>
+        <p style="font-size:17px;font-weight:700;margin-top:10px;color:#38a169;">已核准</p>
+      </div>`;
+    return;
+  }
+  if (status === SOCIAL.STAGE.REJECTED) {
+    panel.innerHTML = `
+      <div style="text-align:center;padding:20px 0;">
+        <div style="font-size:42px;">❌</div>
+        <p style="font-size:17px;font-weight:700;margin-top:10px;color:#e53e3e;">已退回</p>
+      </div>`;
     return;
   }
 
-  // 判斷目前使用者是哪一關的審核人
-  const myRole = detectRole(user?.email ?? '');
-  if (!myRole) {
-    panel.innerHTML = `<p style="color:#718096;font-size:14px;">您不是本申請的審核人。</p>`;
-    return;
-  }
-
-  // 確認目前輪到這一關
-  const stageForRole = {
-    reviewer2: SOCIAL.STAGE.STAGE2,
-    reviewer3: SOCIAL.STAGE.STAGE3,
-    reviewer4: SOCIAL.STAGE.STAGE4,
+  // 審核進行中 — 顯示等待說明
+  const stageLabels = {
+    [SOCIAL.STAGE.STAGE2]: '第一關（所長）',
+    [SOCIAL.STAGE.STAGE3]: '第二關（行銷）',
+    [SOCIAL.STAGE.STAGE4]: '第三關（部長）',
   };
-  if (stage !== stageForRole[myRole]) {
-    panel.innerHTML = `<p style="color:#718096;font-size:14px;">
-      尚未到您的審核關卡（目前：${stageLabel(stage)}）。</p>`;
-    return;
-  }
+  const currentLabel = stageLabels[stage] ?? stage;
+  const reviewerName = {
+    [SOCIAL.STAGE.STAGE2]: _fields[SOCIAL.FIELD.REVIEWER2_NAME],
+    [SOCIAL.STAGE.STAGE3]: _fields[SOCIAL.FIELD.REVIEWER3_NAME],
+    [SOCIAL.STAGE.STAGE4]: _fields[SOCIAL.FIELD.REVIEWER4_NAME],
+  }[stage] ?? '';
 
-  // 顯示審核表單
-  panel.innerHTML = buildReviewForm(myRole);
-  document.getElementById('r-approve-btn')?.addEventListener('click', () => onReview('approve', myRole));
-  document.getElementById('r-reject-btn')?.addEventListener('click',  () => onReview('reject',  myRole));
-}
-
-function detectRole(email) {
-  const e = email.toLowerCase();
-  const emailMap = {
-    reviewer2: (_fields[SOCIAL.FIELD.REVIEWER2_EMAIL] ?? '').toLowerCase(),
-    reviewer3: (_fields[SOCIAL.FIELD.REVIEWER3_EMAIL] ?? '').toLowerCase(),
-    reviewer4: (_fields[SOCIAL.FIELD.REVIEWER4_EMAIL] ?? '').toLowerCase(),
-  };
-  // 優先比對當前 stage 對應的 reviewer（處理同一人擔任多關的情況）
-  const stageRoleMap = {
-    [SOCIAL.STAGE.STAGE2]: 'reviewer2',
-    [SOCIAL.STAGE.STAGE3]: 'reviewer3',
-    [SOCIAL.STAGE.STAGE4]: 'reviewer4',
-  };
-  const currentRole = stageRoleMap[_fields[SOCIAL.FIELD.STAGE] ?? ''];
-  if (currentRole && emailMap[currentRole] === e) return currentRole;
-  // 依序 fallback
-  if (e === emailMap.reviewer2) return 'reviewer2';
-  if (e === emailMap.reviewer3) return 'reviewer3';
-  if (e === emailMap.reviewer4) return 'reviewer4';
-  return null;
-}
-
-function stageLabel(stage) {
-  const map = {
-    [SOCIAL.STAGE.STAGE2]: '所長審核中',
-    [SOCIAL.STAGE.STAGE3]: '行銷審核中',
-    [SOCIAL.STAGE.STAGE4]: '部長審核中',
-  };
-  return map[stage] ?? stage;
-}
-
-function buildReviewForm(role) {
-  const roleLabel = { reviewer2: '所長', reviewer3: '行銷', reviewer4: '部長' }[role];
-  return `
-    <h3 style="font-size:15px;font-weight:700;color:#2d3748;margin-bottom:12px;">
-      ${roleLabel}審核意見</h3>
-    <textarea id="r-comment" rows="4" placeholder="選填：填寫意見或退回原因" style="
-      width:100%;padding:10px 12px;border:1.5px solid #e2e8f0;border-radius:8px;
-      font-size:13px;font-family:'Microsoft JhengHei',sans-serif;resize:vertical;
-      box-sizing:border-box;"></textarea>
-    <div style="display:flex;gap:12px;margin-top:14px;">
-      <button id="r-approve-btn" style="
-        flex:1;padding:12px;background:#38a169;color:#fff;border:none;
-        border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;">
-        ✓ 核准
-      </button>
-      <button id="r-reject-btn" style="
-        flex:1;padding:12px;background:#e53e3e;color:#fff;border:none;
-        border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;">
-        ✕ 退回
-      </button>
-    </div>`;
-}
-
-function buildReadonlyResult(status) {
-  const isApproved = status === SOCIAL.STAGE.APPROVED;
-  return `
-    <div style="text-align:center;padding:20px 0;">
-      <div style="font-size:42px;">${isApproved ? '✅' : '❌'}</div>
-      <p style="font-size:17px;font-weight:700;margin-top:10px;
-        color:${isApproved ? '#38a169' : '#e53e3e'};">
-        ${isApproved ? '已核准' : '已退回'}
+  panel.innerHTML = `
+    <div style="text-align:center;padding:16px 0 8px;">
+      <div style="font-size:36px;margin-bottom:12px;">📬</div>
+      <p style="font-size:15px;font-weight:700;color:#2d3748;margin-bottom:8px;">
+        等待 ${currentLabel} 審核${reviewerName ? `（${reviewerName}）` : ''}
+      </p>
+      <p style="font-size:13px;color:#718096;line-height:1.8;">
+        核准請求已發送至審核人的
+        <strong style="color:#2d3748;">Teams</strong> /
+        <strong style="color:#2d3748;">Outlook</strong>，<br>
+        請審核人直接在通知訊息中點擊 <strong>Approve</strong> 或 <strong>Reject</strong>。
       </p>
     </div>`;
-}
-
-// ─── 送出審核結果 ─────────────────────────────────────────────────────────────
-
-async function onReview(action, role) {
-  const comment = document.getElementById('r-comment')?.value?.trim() ?? '';
-
-  if (action === 'reject' && !comment) {
-    UI.showError('退回時請填寫退回原因');
-    return;
-  }
-
-  const approveBtn = document.getElementById('r-approve-btn');
-  const rejectBtn  = document.getElementById('r-reject-btn');
-  if (approveBtn) approveBtn.disabled = true;
-  if (rejectBtn)  rejectBtn.disabled  = true;
-
-  try {
-    UI.showLoading('儲存審核結果…');
-
-    const fields = buildPatchFields(action, role, comment);
-    await API.updateItem(SOCIAL.LIST_NAME, _item.id, fields);
-
-    // 更新本機資料並重繪
-    Object.assign(_fields, fields);
-
-    UI.hideLoading();
-    UI.showToast(action === 'approve' ? '已核准！' : '已退回，申請人將收到通知', 'success');
-
-    // 重新渲染
-    renderTracker();
-    renderReviewPanel();
-
-  } catch (err) {
-    UI.hideLoading();
-    UI.showError(`儲存失敗：${err.message}`);
-    console.error('[review] onReview error', err);
-    if (approveBtn) approveBtn.disabled = false;
-    if (rejectBtn)  rejectBtn.disabled  = false;
-  }
-}
-
-/**
- * 根據審核動作計算要 PATCH 的欄位
- */
-function buildPatchFields(action, role, comment) {
-  const { FIELD, STAGE } = SOCIAL;
-
-  // 寫入本關意見
-  const commentField = {
-    reviewer2: FIELD.COMMENT2,
-    reviewer3: FIELD.COMMENT3,
-    reviewer4: FIELD.COMMENT4,
-  }[role];
-
-  const now = new Date().toISOString();
-
-  // 各關對應的審核時間戳欄位
-  const reviewedAtField = {
-    reviewer2: FIELD.REVIEWED_AT2,
-    reviewer3: FIELD.REVIEWED_AT3,
-    reviewer4: FIELD.REVIEWED_AT4,
-  }[role];
-
-  if (action === 'reject') {
-    return {
-      [commentField]:    comment,
-      [reviewedAtField]: now,
-      [FIELD.STATUS]:    STAGE.REJECTED,
-      // stage 不變（停在退回關卡）
-    };
-  }
-
-  // 核准 → 推進到下一階段
-  const nextStage = {
-    reviewer2: STAGE.STAGE3,    // 所長核准 → 行銷
-    reviewer3: STAGE.STAGE4,    // 行銷核准 → 部長
-    reviewer4: STAGE.APPROVED,  // 部長核准 → 完成
-  }[role];
-
-  const patch = {
-    [commentField]:    comment,
-    [reviewedAtField]: now,
-    [FIELD.STAGE]:     nextStage,
-  };
-
-  if (role === 'reviewer4') {
-    patch[FIELD.STATUS]      = STAGE.APPROVED;
-    patch[FIELD.APPROVED_AT] = now;
-  } else {
-    patch[FIELD.STATUS] = STAGE.PENDING;  // 待下一關審核
-  }
-
-  return patch;
 }
 
 // ─── 工具函式 ─────────────────────────────────────────────────────────────────
@@ -383,3 +230,4 @@ function showError(msg) {
       </div>`;
   }
 }
+                                                                                                                                                                                         
