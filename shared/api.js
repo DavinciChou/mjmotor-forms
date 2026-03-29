@@ -68,14 +68,13 @@ export async function initSite() {
   _siteId = siteData.id;
 
   // 2. 取得 SiteAssets drive ID
-  const drivesData = await graphGet(
-    `${GRAPH_BASE}/sites/${_siteId}/drives`
+  // 注意：SP 中 SiteAssets 的 list 名稱為 "Site Assets"（含空格），
+  // 且不會出現在 /drives 清單中，必須直接用 lists/Site%20Assets/drive 存取。
+  const siteAssetsData = await graphGet(
+    `${GRAPH_BASE}/sites/${_siteId}/lists/Site%20Assets/drive`
   );
-  const siteAssets = drivesData.value.find(d =>
-    d.name === 'SiteAssets' || d.webUrl?.endsWith('/SiteAssets')
-  );
-  if (!siteAssets) throw new Error('[api] 找不到 SiteAssets library');
-  _siteAssetsId = siteAssets.id;
+  if (!siteAssetsData?.id) throw new Error('[api] 找不到 SiteAssets library');
+  _siteAssetsId = siteAssetsData.id;
 }
 
 function requireInit() {
