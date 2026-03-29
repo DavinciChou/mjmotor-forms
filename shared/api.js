@@ -1,13 +1,11 @@
-/**
- * api.js — 統一的 Graph / SharePoint REST 呼叫層
+﻿/**
+ * api.js ??蝯曹???Graph / SharePoint REST ?澆撅? *
+ * 閮剛???
+ * 1. ??撘?? getToken() ?芸??? token嚗?怎垢銝??芾???
+ * 2. ?????initSite() 銝甈∴?敺??澆?芸?雿輻敹怠???siteId / driveId
+ * 3. 銝瑼??芷??澆 uploadFile()嚗撘?典?瑕之撠粥銝?頝臬?
  *
- * 設計原則
- * 1. 所有函式都透過 getToken() 自動取得 token，呼叫端不需自行處理
- * 2. 啟動時呼叫 initSite() 一次，後續呼叫自動使用快取的 siteId / driveId
- * 3. 上傳檔案只需呼叫 uploadFile()，函式內部判斷大小走不同路徑
- *
- * 使用方式：
- *   import * as API from '../shared/api.js';
+ * 雿輻?孵?嚗? *   import * as API from '../shared/api.js';
  *   await API.initSite();
  *   const items = await API.listItems(LIST_NAME);
  */
@@ -15,15 +13,15 @@
 import { getToken }                           from './auth.js?v=4';
 import { GRAPH_BASE, SP_HOST, SP_SITE_PATH }  from './config.js?v=4';
 
-// ─── 內部快取 ─────────────────────────────────────────────────────────────────
+// ??? ?折敹怠? ?????????????????????????????????????????????????????????????????
 let _siteId         = null;   // SP site GUID
 let _siteAssetsId   = null;   // SiteAssets document library drive ID
-let _listCache      = {};     // listName → listId
+let _listCache      = {};     // listName ??listId
 
-// ─── 低階 fetch 工具 ──────────────────────────────────────────────────────────
+// ??? 雿? fetch 撌亙 ??????????????????????????????????????????????????????????
 
 /**
- * 帶 Bearer token 的 fetch 封裝
+ * 撣?Bearer token ??fetch 撠?
  * @param {string} url
  * @param {RequestInit} [opts]
  * @returns {Promise<Response>}
@@ -39,59 +37,57 @@ async function authFetch(url, opts = {}) {
   if (!res.ok) {
     let errBody = '';
     try { errBody = await res.text(); } catch (_) { /* ignore */ }
-    throw new Error(`[api] HTTP ${res.status} ${res.statusText} — ${url}\n${errBody}`);
+    throw new Error(`[api] HTTP ${res.status} ${res.statusText} ??${url}\n${errBody}`);
   }
   return res;
 }
 
 /**
- * authFetch + JSON 解析
+ * authFetch + JSON 閫??
  */
-async function graphGet(url) {
-  const res = await authFetch(url);
+async function graphGet(url, extraHeaders = {}) {
+  const res = await authFetch(url, { headers: extraHeaders });
   return res.json();
 }
 
-// ─── 初始化（必須在使用前呼叫一次）──────────────────────────────────────────
+// ??? ????敹??其蝙?典??澆銝甈∴???????????????????????????????????????????
 
 /**
- * 解析 siteId 與 SiteAssets driveId，結果快取。
- * 建議在 app 進入點呼叫：await API.initSite();
+ * 閫?? siteId ??SiteAssets driveId嚗??翰?? * 撱箄降??app ?脣暺?恬?await API.initSite();
  */
 export async function initSite() {
-  if (_siteId) return; // 已初始化
+  if (_siteId) return; // 撌脣?憪?
 
-  // 1. 取得 siteId
+  // 1. ?? siteId
   const siteData = await graphGet(
     `${GRAPH_BASE}/sites/${SP_HOST}:${SP_SITE_PATH}`
   );
   _siteId = siteData.id;
 
-  // 2. 取得 SiteAssets drive ID
-  // 注意：SP 中 SiteAssets 的 list 名稱為 "Site Assets"（含空格），
-  // 且不會出現在 /drives 清單中，必須直接用 lists/Site%20Assets/drive 存取。
-  const siteAssetsData = await graphGet(
+  // 2. ?? SiteAssets drive ID
+  // 瘜冽?嚗P 銝?SiteAssets ??list ?迂??"Site Assets"嚗蝛箸嚗?
+  // 銝???曉 /drives 皜銝哨?敹??湔??lists/Site%20Assets/drive 摮???  const siteAssetsData = await graphGet(
     `${GRAPH_BASE}/sites/${_siteId}/lists/Site%20Assets/drive`
   );
-  if (!siteAssetsData?.id) throw new Error('[api] 找不到 SiteAssets library');
+  if (!siteAssetsData?.id) throw new Error('[api] ?曆???SiteAssets library');
   _siteAssetsId = siteAssetsData.id;
 }
 
 function requireInit() {
-  if (!_siteId) throw new Error('[api] 請先呼叫 initSite()');
+  if (!_siteId) throw new Error('[api] 隢??澆 initSite()');
 }
 
-/** 供外部模組取得已快取的 siteId */
+/** 靘??冽芋蝯?敺歇敹怠???siteId */
 export function getSiteId() { requireInit(); return _siteId; }
 
-/** 供外部模組直接取得 Graph auth token */
+/** 靘??冽芋蝯?亙?敺?Graph auth token */
 export async function getAuthToken() { return getToken(); }
 
-// ─── SharePoint List CRUD ─────────────────────────────────────────────────────
+// ??? SharePoint List CRUD ?????????????????????????????????????????????????????
 
 /**
- * 解析 listId（結果快取）
- * @param {string} listName SP 清單顯示名稱
+ * 閫?? listId嚗??翰??
+ * @param {string} listName SP 皜憿舐內?迂
  */
 async function resolveListId(listName) {
   if (_listCache[listName]) return _listCache[listName];
@@ -104,7 +100,7 @@ async function resolveListId(listName) {
 }
 
 /**
- * 查詢清單項目
+ * ?亥岷皜?
  * @param {string} listName
  * @param {object} [opts] - { filter, select, orderby, top, expand }
  * @returns {Promise<object[]>} items
@@ -121,13 +117,13 @@ export async function listItems(listName, opts = {}) {
 
   const qs = params.toString() ? `?${params}` : '';
   const url = `${GRAPH_BASE}/sites/${_siteId}/lists/${listId}/items${qs}`;
-  const data = await graphGet(url);
+  const extra = opts.prefer ? { Prefer: opts.prefer } : {};
+  const data = await graphGet(url, extra);
   return data.value ?? [];
 }
 
 /**
- * 取得單筆清單項目（含 fields）
- * @param {string} listName
+ * ???桃?皜?嚗 fields嚗? * @param {string} listName
  * @param {number|string} itemId
  * @returns {Promise<object>}
  */
@@ -141,10 +137,10 @@ export async function getItem(listName, itemId) {
 }
 
 /**
- * 新增清單項目
+ * ?啣?皜?
  * @param {string} listName
- * @param {object} fields  欄位 key-value
- * @returns {Promise<object>} 新建的 item
+ * @param {object} fields  甈? key-value
+ * @returns {Promise<object>} ?啣遣??item
  */
 export async function createItem(listName, fields) {
   requireInit();
@@ -160,10 +156,10 @@ export async function createItem(listName, fields) {
 }
 
 /**
- * 更新清單項目（PATCH，只更新傳入的欄位）
+ * ?湔皜?嚗ATCH嚗?湔?喳??雿?
  * @param {string} listName
  * @param {number|string} itemId
- * @param {object} fields  要更新的欄位 key-value
+ * @param {object} fields  閬?啁?甈? key-value
  */
 export async function updateItem(listName, itemId, fields) {
   requireInit();
@@ -177,17 +173,14 @@ export async function updateItem(listName, itemId, fields) {
   );
 }
 
-// ─── 檔案上傳 ─────────────────────────────────────────────────────────────────
+// ??? 瑼?銝 ?????????????????????????????????????????????????????????????????
 
 /**
- * 上傳檔案到 SiteAssets 下的指定路徑
- * < 4 MB → 單次上傳（PUT）
- * ≥ 4 MB → 分片上傳（upload session）
- *
- * @param {string} remotePath  相對於 SiteAssets 根，例如 '自媒體素材審核/2026-03/42/p1.jpg'
+ * 銝瑼???SiteAssets 銝???頝臬?
+ * < 4 MB ???格活銝嚗UT嚗? * ??4 MB ????銝嚗pload session嚗? *
+ * @param {string} remotePath  ?詨???SiteAssets ?對?靘? '?芸?擃??祟??2026-03/42/p1.jpg'
  * @param {File|Blob} file
- * @param {(pct: number) => void} [onProgress]  進度回呼（0–100）
- * @returns {Promise<string>} 上傳後的 webUrl
+ * @param {(pct: number) => void} [onProgress]  ?脣漲?嚗???00嚗? * @returns {Promise<string>} 銝敺? webUrl
  */
 export async function uploadFile(remotePath, file, onProgress) {
   requireInit();
@@ -208,7 +201,7 @@ async function _uploadSmall(remotePath, file, onProgress) {
     headers: { Authorization: `Bearer ${token}` },
     body:    file,
   });
-  if (!res.ok) throw new Error(`[api] 上傳失敗 (${res.status}) — ${remotePath}`);
+  if (!res.ok) throw new Error(`[api] 銝憭望? (${res.status}) ??${remotePath}`);
   onProgress?.(100);
   const data = await res.json();
   return data.webUrl;
@@ -219,17 +212,16 @@ async function _uploadLarge(remotePath, file, onProgress) {
   const sessionUrl = `${GRAPH_BASE}/drives/${_siteAssetsId}/root:/${encoded}:/createUploadSession`;
   const token = await getToken();
 
-  // 建立 upload session
+  // 撱箇? upload session
   const sessionRes = await fetch(sessionUrl, {
     method:  'POST',
     headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
     body:    JSON.stringify({ item: { '@microsoft.graph.conflictBehavior': 'replace' } }),
   });
-  if (!sessionRes.ok) throw new Error('[api] 無法建立 upload session');
+  if (!sessionRes.ok) throw new Error('[api] ?⊥?撱箇? upload session');
   const { uploadUrl } = await sessionRes.json();
 
-  // 分片上傳（每片 5 MB）
-  const chunkSize = 5 * 1024 * 1024;
+  // ??銝嚗???5 MB嚗?  const chunkSize = 5 * 1024 * 1024;
   let offset = 0;
   let webUrl  = '';
 
@@ -245,7 +237,7 @@ async function _uploadLarge(remotePath, file, onProgress) {
       body: chunk,
     });
     if (!chunkRes.ok && chunkRes.status !== 202)
-      throw new Error(`[api] 分片上傳失敗 (${chunkRes.status})`);
+      throw new Error(`[api] ??銝憭望? (${chunkRes.status})`);
 
     offset += chunkSize;
     onProgress?.(Math.min(99, Math.round((offset / file.size) * 100)));
@@ -260,11 +252,10 @@ async function _uploadLarge(remotePath, file, onProgress) {
   return webUrl;
 }
 
-// ─── 確保目錄存在 ─────────────────────────────────────────────────────────────
+// ??? 蝣箔??桅?摮 ?????????????????????????????????????????????????????????????
 
 /**
- * 確保 SiteAssets 下的資料夾路徑存在（自動逐層建立）
- * @param {string} folderPath  例如 '自媒體素材審核/2026-03/42'
+ * 蝣箔? SiteAssets 銝?鞈?憭曇楝敺??剁??芸??惜撱箇?嚗? * @param {string} folderPath  靘? '?芸?擃??祟??2026-03/42'
  */
 export async function ensureFolder(folderPath) {
   requireInit();
@@ -280,8 +271,7 @@ export async function ensureFolder(folderPath) {
       headers: { Authorization: `Bearer ${token}` },
     });
     if (res.status === 404) {
-      // 建立此層資料夾
-      const parentEncoded = current.includes('/')
+      // 撱箇?甇文惜鞈?憭?      const parentEncoded = current.includes('/')
         ? current.split('/').slice(0, -1).map(encodeURIComponent).join('/')
         : '';
       const parentUrl = parentEncoded
@@ -299,33 +289,27 @@ export async function ensureFolder(folderPath) {
   }
 }
 
-// ─── 讀取 Excel（審核路由表 / 勞工名冊）────────────────────────────────────────
+// ??? 霈??Excel嚗祟?貉楝?梯” / ?極??嚗????????????????????????????????????????
 
 /**
- * 讀取 SiteAssets 下的 Excel，回傳指定 Sheet 的物件陣列（第一列為標題）
- *
- * 實作：直接下載 .xlsx 二進位，用 SheetJS（全域 XLSX）在瀏覽器端解析。
- * 避免使用 Graph Excel Workbook API（需 WAC token，部分租用戶無法取得）。
- *
- * @param {string} excelPath  相對於 SiteAssets，例如 '自媒體素材審核/審核路由表.xlsx'
- * @param {string} [sheetName]  Sheet 名稱，預設第一個 Sheet
- * @returns {Promise<object[]>}  每列轉為 { 標題: 值 } 的物件陣列
- */
+ * 霈??SiteAssets 銝? Excel嚗??單?摰?Sheet ?隞園??蝚砌??璅?嚗? *
+ * 撖虫?嚗?乩?頛?.xlsx 鈭脖?嚗 SheetJS嚗??XLSX嚗?汗?函垢閫???? * ?踹?雿輻 Graph Excel Workbook API嚗? WAC token嚗???冽?⊥???嚗? *
+ * @param {string} excelPath  ?詨???SiteAssets嚗?憒?'?芸?擃??祟??撖拇頝舐銵?xlsx'
+ * @param {string} [sheetName]  Sheet ?迂嚗?閮剔洵銝??Sheet
+ * @returns {Promise<object[]>}  瘥?頧 { 璅?: ??} ?隞園?? */
 export async function readExcel(excelPath, sheetName) {
   requireInit();
 
-  // 確保 SheetJS 已載入
-  if (typeof XLSX === 'undefined') {
+  // 蝣箔? SheetJS 撌脰???  if (typeof XLSX === 'undefined') {
     await _loadSheetJS();
   }
 
   const token   = await getToken();
   const encoded = excelPath.split('/').map(encodeURIComponent).join('/');
 
-  // 下載 xlsx 二進位（不使用 Workbook API，避免 WAC token 問題）
-  const dlUrl = `${GRAPH_BASE}/drives/${_siteAssetsId}/root:/${encoded}:/content`;
+  // 銝? xlsx 鈭脖?嚗?雿輻 Workbook API嚗??WAC token ??嚗?  const dlUrl = `${GRAPH_BASE}/drives/${_siteAssetsId}/root:/${encoded}:/content`;
   const res   = await fetch(dlUrl, { headers: { Authorization: `Bearer ${token}` } });
-  if (!res.ok) throw new Error(`[api] 無法下載 Excel: ${excelPath} (${res.status})`);
+  if (!res.ok) throw new Error(`[api] ?⊥?銝? Excel: ${excelPath} (${res.status})`);
 
   const arrayBuf = await res.arrayBuffer();
   const workbook = XLSX.read(arrayBuf, { type: 'array' });
@@ -333,37 +317,36 @@ export async function readExcel(excelPath, sheetName) {
   const targetSheet = sheetName
     ? workbook.Sheets[sheetName]
     : workbook.Sheets[workbook.SheetNames[0]];
-  if (!targetSheet) throw new Error(`[api] 找不到 Sheet: ${sheetName}`);
+  if (!targetSheet) throw new Error(`[api] ?曆???Sheet: ${sheetName}`);
 
-  // header: 1 → 二維陣列；defval: '' → 空格填空字串
+  // header: 1 ??鈭雁???嚗efval: '' ??蝛箸憛怎征摮葡
   const rows = XLSX.utils.sheet_to_json(targetSheet, { header: 1, defval: '' });
   if (!rows || rows.length < 2) return [];
 
   const headers = rows[0];
   return rows.slice(1)
-    .filter(row => row.some(v => v !== ''))   // 過濾全空列
-    .map(row => {
+    .filter(row => row.some(v => v !== ''))   // ?蕪?函征??    .map(row => {
       const obj = {};
       headers.forEach((h, i) => { obj[h] = row[i] ?? ''; });
       return obj;
     });
 }
 
-/** 動態載入 SheetJS（如頁面未預先引入） */
+/** ??頛 SheetJS嚗???芷????伐? */
 function _loadSheetJS() {
   return new Promise((resolve, reject) => {
     const s = document.createElement('script');
     s.src = 'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';
     s.onload  = resolve;
-    s.onerror = () => reject(new Error('[api] 無法載入 SheetJS'));
+    s.onerror = () => reject(new Error('[api] ?⊥?頛 SheetJS'));
     document.head.appendChild(s);
   });
 }
 
-// ─── 工具函式 ─────────────────────────────────────────────────────────────────
+// ??? 撌亙?賢? ?????????????????????????????????????????????????????????????????
 
 /**
- * 產生本月資料夾名稱，格式 YYYY-MM
+ * ?Ｙ??祆?鞈?憭曉?蝔梧??澆? YYYY-MM
  */
 export function currentMonthFolder() {
   const d = new Date();

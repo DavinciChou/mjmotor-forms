@@ -514,6 +514,7 @@ async function loadMyApplications() {
       expand:  'fields($select=Title,Platform,Stage,Status,SubmittedAt)',
       orderby: 'fields/SubmittedAt desc',
       top:     '20',
+      prefer:  'HonorNonIndexedQueriesWarningMayFailRandomly',
     });
 
     // 更新筆數
