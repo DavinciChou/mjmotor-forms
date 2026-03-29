@@ -26,7 +26,7 @@
  */
 
 import { loginIfNeeded, getCurrentUser } from '../shared/auth.js?v=10';
-import * as API                          from '../shared/api.js?v=11';
+import * as API                          from '../shared/api.js?v=12';
 import * as UI                           from '../shared/ui.js?v=11';
 import { SOCIAL }                        from '../shared/config.js?v=10';
 
