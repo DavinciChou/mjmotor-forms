@@ -598,4 +598,3 @@ async function loadMyApplications() {
   }
 }
 
-/** 設為�
