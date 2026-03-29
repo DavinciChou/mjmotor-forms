@@ -25,10 +25,10 @@
  *                                    /attachment.pdf
  */
 
-import { loginIfNeeded, getCurrentUser } from '../shared/auth.js?v=8';
-import * as API                          from '../shared/api.js?v=8';
-import * as UI                           from '../shared/ui.js?v=8';
-import { SOCIAL }                        from '../shared/config.js?v=8';
+import { loginIfNeeded, getCurrentUser } from '../shared/auth.js?v=9';
+import * as API                          from '../shared/api.js?v=9';
+import * as UI                           from '../shared/ui.js?v=9';
+import { SOCIAL }                        from '../shared/config.js?v=9';
 
 // ─── 全域狀態 ──────────────────────────────────────────────────────────────────
 let _routeTable  = [];   // 審核路由表（從 Excel 載入）
