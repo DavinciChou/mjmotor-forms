@@ -1,4 +1,4 @@
-/**
+﻿/**
  * social-media/review.js — 自媒體素材審核（審核人端）
  *
  * 職責：
@@ -74,13 +74,7 @@ function renderMeta() {
   setText('r-submitted-at',   UI.formatDateTime(_fields[SOCIAL.FIELD.SUBMITTED_AT]));
   setText('r-item-id',        `#${_item.id}`);
 
-  // 審核人員區塊
-  setText('r2-name',  _fields[SOCIAL.FIELD.REVIEWER2_NAME]  ?? '—');
-  setText('r2-email', _fields[SOCIAL.FIELD.REVIEWER2_EMAIL] ?? '—');
-  setText('r3-name',  _fields[SOCIAL.FIELD.REVIEWER3_NAME]  ?? '—');
-  setText('r3-email', _fields[SOCIAL.FIELD.REVIEWER3_EMAIL] ?? '—');
-  setText('r4-name',  _fields[SOCIAL.FIELD.REVIEWER4_NAME]  ?? '—');
-  setText('r4-email', _fields[SOCIAL.FIELD.REVIEWER4_EMAIL] ?? '—');
+
 }
 
 // 進度條（含各關完成時間）
@@ -94,6 +88,12 @@ function renderTracker() {
       stage2:   _fields[SOCIAL.FIELD.REVIEWED_AT2],
       stage3:   _fields[SOCIAL.FIELD.REVIEWED_AT3],
       stage4:   _fields[SOCIAL.FIELD.REVIEWED_AT4] || _fields[SOCIAL.FIELD.APPROVED_AT],
+    },
+    {
+      applicant: _fields[SOCIAL.FIELD.APPLICANT_NAME] ?? '',
+      reviewer2: _fields[SOCIAL.FIELD.REVIEWER2_NAME] ?? '',
+      reviewer3: _fields[SOCIAL.FIELD.REVIEWER3_NAME] ?? '',
+      reviewer4: _fields[SOCIAL.FIELD.REVIEWER4_NAME] ?? '',
     }
   );
 }

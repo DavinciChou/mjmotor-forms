@@ -1,4 +1,4 @@
-/**
+﻿/**
  * ui.js — 通用 UI 元件
  *
  * 包含：
@@ -146,7 +146,7 @@ function calcActiveStep(stage, status) {
  * @param {object} [timestamps]  各關完成時間 { submit, stage2, stage3, stage4, approved }
  *   每個值為 ISO 字串，有值才顯示，沒有值就不顯示
  */
-export function renderTracker(containerOrId, stage, status, timestamps = {}) {
+export function renderTracker(containerOrId, stage, status, timestamps = {}, names = {}) {
   const container = typeof containerOrId === 'string'
     ? document.getElementById(containerOrId)
     : containerOrId;
@@ -210,6 +210,15 @@ export function renderTracker(containerOrId, stage, status, timestamps = {}) {
       font-family:'Microsoft JhengHei',sans-serif;`;
     label.textContent = step.label;
 
+    // 審核人姓名
+    const nameKeys = ['applicant', 'reviewer2', 'reviewer3', 'reviewer4'];
+    const nameText = document.createElement('div');
+    const personName = names[nameKeys[idx]] ?? '';
+    if (personName) {
+      nameText.style.cssText = 'margin-top:2px;font-size:11px;color:#4a5568;text-align:center;font-weight:500;';
+      nameText.textContent = personName;
+    }
+
     // 狀態文字（審核中 / 退回）
     const statusText = document.createElement('div');
     statusText.style.cssText = 'margin-top:3px;font-size:11px;font-weight:600;text-align:center;';
@@ -237,6 +246,7 @@ export function renderTracker(containerOrId, stage, status, timestamps = {}) {
 
     nodeWrap.appendChild(circle);
     nodeWrap.appendChild(label);
+    if (personName) nodeWrap.appendChild(nameText);
     if (isReject || isActive) nodeWrap.appendChild(statusText);
     nodeWrap.appendChild(timeText);
 
