@@ -17,10 +17,10 @@
  * PA 僅負責 Email 通知；狀態機更新由此頁面直接 PATCH SP List。
  */
 
-import { loginIfNeeded, getCurrentUser } from '../shared/auth.js';
-import * as API                          from '../shared/api.js';
-import * as UI                           from '../shared/ui.js';
-import { SOCIAL }                        from '../shared/config.js';
+import { loginIfNeeded, getCurrentUser } from '../shared/auth.js?v=9';
+import * as API                          from '../shared/api.js?v=9';
+import * as UI                           from '../shared/ui.js?v=9';
+import { SOCIAL }                        from '../shared/config.js?v=9';
 
 // ─── 進入點 ───────────────────────────────────────────────────────────────────
 
@@ -69,10 +69,18 @@ function renderMeta() {
   setText('r-applicant',      _fields[SOCIAL.FIELD.APPLICANT_NAME]  ?? '—');
   setText('r-location',       _fields[SOCIAL.FIELD.LOCATION]        ?? '—');
   setText('r-platform',       _fields[SOCIAL.FIELD.PLATFORM]        ?? '—');
-  setText('r-post-date',      UI.formatDate(_fields[SOCIAL.FIELD.SHOOT_DATE]));
+  setText('r-post-date',      UI.formatDate(_fields[SOCIAL.FIELD.PUBLISH_DATE]));
   setText('r-caption',        _fields[SOCIAL.FIELD.CONTENT]         ?? '—');
   setText('r-submitted-at',   UI.formatDateTime(_fields[SOCIAL.FIELD.SUBMITTED_AT]));
   setText('r-item-id',        `#${_item.id}`);
+
+  // 審核人員區塊
+  setText('r2-name',  _fields[SOCIAL.FIELD.REVIEWER2_NAME]  ?? '—');
+  setText('r2-email', _fields[SOCIAL.FIELD.REVIEWER2_EMAIL] ?? '—');
+  setText('r3-name',  _fields[SOCIAL.FIELD.REVIEWER3_NAME]  ?? '—');
+  setText('r3-email', _fields[SOCIAL.FIELD.REVIEWER3_EMAIL] ?? '—');
+  setText('r4-name',  _fields[SOCIAL.FIELD.REVIEWER4_NAME]  ?? '—');
+  setText('r4-email', _fields[SOCIAL.FIELD.REVIEWER4_EMAIL] ?? '—');
 }
 
 // 進度條（含各關完成時間）
