@@ -579,4 +579,21 @@ async function loadMyApplications() {
     // 捲動偵測：捲到底移除漸層遮罩
     if (scroll && outer) {
       // 若全部內容都在可見範圍內，直接隱藏遮罩
-      if (scroll.scrollHeight <= scroll.clie
+      if (scroll.scrollHeight <= scroll.clientHeight + 4) {
+        outer.classList.add('no-more');
+      }
+      scroll.addEventListener('scroll', () => {
+        const atBottom = scroll.scrollTop + scroll.clientHeight >= scroll.scrollHeight - 4;
+        outer.classList.toggle('no-more', atBottom);
+      }, { passive: true });
+    }
+
+  } catch (err) {
+    console.warn('[myApps] 載入失敗', err);
+    list.innerHTML = `
+      <div style="text-align:center;padding:16px;color:var(--sub);font-size:12px;">
+        載入申請紀錄失敗
+      </div>`;
+    if (outer) outer.classList.add('no-more');
+  }
+}
