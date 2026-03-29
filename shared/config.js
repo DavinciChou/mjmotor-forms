@@ -68,8 +68,7 @@ export const SOCIAL = {
     APPLICANT_EMAIL:'ApplicantEmail',
     LOCATION:       'Location',
     PLATFORM:       'Platform',
-    SHOOT_DATE:     'ShootDate',     // 預計拍攝日期
-    PURPOSE:        'Purpose',       // 拍攝目的
+    PUBLISH_DATE:   'PublishDate',   // 預計發布日期
     CONTENT:        'Content',       // 素材內容說明（貼文內容）
     STAGE:          'Stage',         // 審核階段（內部流程用）
     STATUS:         'Status',        // 審核狀態（對外顯示用）
