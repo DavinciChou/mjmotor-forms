@@ -25,10 +25,10 @@
  *                                    /attachment.pdf
  */
 
-import { loginIfNeeded, getCurrentUser } from '../shared/auth.js?v=6';
-import * as API                          from '../shared/api.js?v=6';
-import * as UI                           from '../shared/ui.js?v=6';
-import { SOCIAL }                        from '../shared/config.js?v=6';
+import { loginIfNeeded, getCurrentUser } from '../shared/auth.js?v=7';
+import * as API                          from '../shared/api.js?v=7';
+import * as UI                           from '../shared/ui.js?v=7';
+import { SOCIAL }                        from '../shared/config.js?v=7';
 
 // ─── 全域狀態 ──────────────────────────────────────────────────────────────────
 let _routeTable  = [];   // 審核路由表（從 Excel 載入）
@@ -362,7 +362,6 @@ function collectFields() {
     [SOCIAL.FIELD.APPLICANT_EMAIL]: getVal('applicant-email'),
     [SOCIAL.FIELD.LOCATION]:        getVal('location'),
     [SOCIAL.FIELD.PLATFORM]:        getVal('platform'),
-    [SOCIAL.FIELD.SHOOT_DATE]:      getVal('post-date'),
     [SOCIAL.FIELD.CONTENT]:         getVal('caption'),
     // reviewer 資料讀取隱藏 input（-val 後綴）
     [SOCIAL.FIELD.REVIEWER2_NAME]:  getVal('reviewer2-name-val'),
