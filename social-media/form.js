@@ -25,10 +25,10 @@
  *                                    /attachment.pdf
  */
 
-import { loginIfNeeded, getCurrentUser } from '../shared/auth.js?v=5';
-import * as API                          from '../shared/api.js?v=5';
-import * as UI                           from '../shared/ui.js?v=5';
-import { SOCIAL }                        from '../shared/config.js?v=5';
+import { loginIfNeeded, getCurrentUser } from '../shared/auth.js?v=6';
+import * as API                          from '../shared/api.js?v=6';
+import * as UI                           from '../shared/ui.js?v=6';
+import { SOCIAL }                        from '../shared/config.js?v=6';
 
 // ─── 全域狀態 ──────────────────────────────────────────────────────────────────
 let _routeTable  = [];   // 審核路由表（從 Excel 載入）
@@ -104,8 +104,8 @@ async function autoFillLocation() {
   if (!user) return;
 
   try {
-    // 讀勞工名冊，指定 Sheet 名稱「勞工名冊」
-    const rows = await API.readExcel(SOCIAL.ROSTER_PATH, '勞工名冊');
+    // 讀勞工名冊，指定 Sheet 名稱（另存的純值 sheet 為「工作表1」）
+    const rows = await API.readExcel(SOCIAL.ROSTER_PATH, '工作表1');
 
     // 以姓名比對（名冊無 Email 欄）
     const myRecord = rows.find(r =>
