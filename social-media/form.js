@@ -258,15 +258,24 @@ function renderFileList(type) {
   const list   = document.getElementById(listId);
   if (!list) return;
 
-  list.innerHTML = store.map((f, i) => `
-    <div style="display:flex;align-items:center;gap:8px;padding:5px 8px;
-      background:#f7fafc;border-radius:5px;font-size:12px;">
-      <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${f.name}</span>
-      <span style="color:#718096;font-size:11px;">${formatBytes(f.size)}</span>
-      <button data-remove="${i}" style="
-        border:none;background:none;color:#e53e3e;cursor:pointer;
-        font-size:15px;line-height:1;padding:0 3px;">×</button>
-    </div>`).join('');
+  list.innerHTML = store.map((f, i) => {
+    // 照片：產生縮圖預覽（讓使用者確認是否為正確的圖片再移除）
+    const thumb = type === 'photo'
+      ? `<img src="${URL.createObjectURL(f)}" style="
+          width:34px;height:34px;object-fit:cover;border-radius:4px;flex-shrink:0;
+          border:1px solid #e2e8f0;" />`
+      : '';
+    return `
+      <div style="display:flex;align-items:center;gap:7px;padding:5px 7px;
+        background:#f7fafc;border-radius:5px;font-size:12px;">
+        ${thumb}
+        <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${f.name}</span>
+        <span style="color:#718096;font-size:10px;flex-shrink:0;">${formatBytes(f.size)}</span>
+        <button data-remove="${i}" title="移除" style="
+          border:none;background:none;color:#e53e3e;cursor:pointer;
+          font-size:16px;line-height:1;padding:2px 4px;flex-shrink:0;">×</button>
+      </div>`;
+  }).join('');
 }
 
 function formatBytes(bytes) {
@@ -437,6 +446,7 @@ async function uploadMedia(mediaFolder, itemId) {
 // ─── 確認畫面 ─────────────────────────────────────────────────────────────────
 
 function showConfirmScreen(itemId) {
+  const submittedAt = new Date().toISOString();  // Bug3 fix：記錄送出時間
   const form    = document.getElementById('form-section');
   const confirm = document.getElementById('confirm-section');
   if (form)    form.style.display    = 'none';
@@ -450,12 +460,15 @@ function showConfirmScreen(itemId) {
 
   const tracker = document.getElementById('confirm-tracker');
   if (tracker) {
-    UI.renderTracker(tracker, SOCIAL.STAGE.STAGE2, SOCIAL.STAGE.PENDING, {}, {
-      applicant: getVal('applicant-name'),
-      reviewer2: getVal('reviewer2-name-val'),
-      reviewer3: getVal('reviewer3-name-val'),
-      reviewer4: getVal('reviewer4-name-val'),
-    });
+    UI.renderTracker(tracker, SOCIAL.STAGE.STAGE2, SOCIAL.STAGE.PENDING,
+      { submit: submittedAt },   // Bug3 fix：傳入送出時間，讓第一關顯示日期+時間
+      {
+        applicant: getVal('applicant-name'),
+        reviewer2: getVal('reviewer2-name-val'),
+        reviewer3: getVal('reviewer3-name-val'),
+        reviewer4: getVal('reviewer4-name-val'),
+      }
+    );
   }
 
   // 送出後重新整理紀錄清單（帶入最新一筆）
