@@ -219,6 +219,99 @@
 
     /* 隱藏 file input */
     input[type=file] { display: none; }
+
+    /* ── 我的申請紀錄 ── */
+    .my-apps-count {
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--sub);
+      background: var(--bg);
+      padding: 2px 9px;
+      border-radius: 20px;
+    }
+    /* 外層相對定位，用於底部漸層遮罩 */
+    .my-apps-outer { position: relative; }
+    .my-apps-outer::after {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 0; right: 5px;
+      height: 34px;
+      background: linear-gradient(to bottom, transparent, rgba(255,255,255,.95));
+      pointer-events: none;
+      border-radius: 0 0 6px 6px;
+      transition: opacity .25s;
+    }
+    .my-apps-outer.no-more::after { opacity: 0; }
+    /* 捲動容器：預設 2 筆可見（每筆 ~68px + 10px gap = 78px；2筆 = 78+68 = 146px） */
+    .my-apps-scroll {
+      max-height: 146px;
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: #cbd5e0 transparent;
+      padding-right: 5px;
+    }
+    .my-apps-scroll::-webkit-scrollbar       { width: 4px; }
+    .my-apps-scroll::-webkit-scrollbar-track { background: transparent; }
+    .my-apps-scroll::-webkit-scrollbar-thumb { background: #cbd5e0; border-radius: 4px; }
+    /* 紀錄清單 */
+    .my-apps-list { display: flex; flex-direction: column; gap: 8px; }
+    /* 單筆紀錄 */
+    .my-app-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      background: var(--bg);
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      text-decoration: none;
+      color: inherit;
+      cursor: pointer;
+      transition: border-color .15s, background .15s;
+      min-height: 58px;
+    }
+    .my-app-item:hover { border-color: var(--primary); background: var(--primary-l); }
+    .my-app-dot {
+      width: 9px; height: 9px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .dot-pending  { background: #d69e2e; }
+    .dot-approved { background: var(--success); }
+    .dot-rejected { background: var(--danger); }
+    .my-app-body { flex: 1; min-width: 0; }
+    .my-app-title {
+      font-size: 13px; font-weight: 600;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .my-app-meta {
+      font-size: 11px; color: var(--sub);
+      margin-top: 3px;
+      display: flex; gap: 6px; flex-wrap: wrap; align-items: center;
+    }
+    .my-app-meta .sep { color: var(--border); }
+    .app-badge {
+      padding: 2px 9px;
+      border-radius: 20px;
+      font-size: 11px; font-weight: 700;
+      flex-shrink: 0; white-space: nowrap;
+    }
+    .badge-pending  { background: #fefcbf; color: #975a16; }
+    .badge-approved { background: #c6f6d5; color: #276749; }
+    .badge-rejected { background: #fed7d7; color: #c53030; }
+    .my-app-arrow { color: #cbd5e0; font-size: 16px; flex-shrink: 0; }
+    /* Skeleton loading */
+    .my-app-skel {
+      height: 58px;
+      background: linear-gradient(90deg, #f0f4f8 25%, #e2e8f0 50%, #f0f4f8 75%);
+      background-size: 200% 100%;
+      border-radius: 6px;
+      animation: shimmer 1.4s infinite;
+    }
+    @keyframes shimmer {
+      0%   { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
   </style>
 </head>
 <body>
@@ -383,10 +476,27 @@
     </div>
   </div>
 
+  <!-- 我的申請紀錄 -->
+  <div class="card" id="my-apps-card" style="display:none;">
+    <div class="card-title">
+      📂 我的申請紀錄
+      <span class="my-apps-count" id="my-apps-count"></span>
+    </div>
+    <div class="my-apps-outer" id="myAppsOuter">
+      <div class="my-apps-scroll" id="myAppsScroll">
+        <div class="my-apps-list" id="my-apps-list">
+          <!-- skeleton 預設兩筆 -->
+          <div class="my-app-skel"></div>
+          <div class="my-app-skel"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
 </div><!-- /.page-wrap -->
 
 <!-- form.js（ES module） -->
-<script type="module" src="form.js?v=11"></script>
+<script type="module" src="form.js?v=12"></script>
 
 <!-- topbar 使用者名稱 -->
 <script type="module">

@@ -54,6 +54,8 @@ let _attachFiles = [];   // 已選取的附件 File[]
     bindEvents();                        // 綁定表單事件
     UI.hideLoading();
 
+    loadMyApplications();               // 非同步載入申請紀錄（不阻塞主流程）
+
   } catch (err) {
     UI.hideLoading();
     UI.showError(`初始化失敗：${err.message}`);
@@ -455,6 +457,9 @@ function showConfirmScreen(itemId) {
       reviewer4: getVal('reviewer4-name-val'),
     });
   }
+
+  // 送出後重新整理紀錄清單（帶入最新一筆）
+  loadMyApplications();
 }
 
 // ─── 工具函式 ─────────────────────────────────────────────────────────────────
@@ -479,6 +484,118 @@ function setAutoField(id, text, smallFont = false) {
   if (!el) return;
   el.classList.remove('loading');
   el.innerHTML = `<span${smallFont ? ' style="font-size:11px;"' : ''}>${text}</span> <span class="lock">🔒</span>`;
+}
+
+// ─── 我的申請紀錄 ──────────────────────────────────────────────────────────────
+
+/**
+ * 從 SP 查詢目前登入者的申請紀錄，渲染至 #my-apps-card。
+ * 非同步執行，不阻塞主表單初始化。
+ */
+async function loadMyApplications() {
+  const card   = document.getElementById('my-apps-card');
+  const list   = document.getElementById('my-apps-list');
+  const outer  = document.getElementById('myAppsOuter');
+  const scroll = document.getElementById('myAppsScroll');
+  const countEl = document.getElementById('my-apps-count');
+  if (!card || !list) return;
+
+  // 顯示卡片（skeleton 已在 HTML 裡）
+  card.style.display = '';
+
+  try {
+    const { getCurrentUser } = await import('../shared/auth.js?v=11');
+    const user = getCurrentUser();
+    if (!user?.email) return;          // 尚未登入則跳過
+
+    const email = user.email;
+    const items = await API.listItems(SOCIAL.LIST_NAME, {
+      filter:  `fields/ApplicantEmail eq '${email}'`,
+      select:  'id,fields/Title,fields/Platform,fields/Stage,fields/Status,fields/SubmittedAt',
+      orderby: 'fields/SubmittedAt desc',
+      top:     '20',
+    });
+
+    // 更新筆數
+    if (countEl) countEl.textContent = items.length ? `${items.length} 筆` : '';
+
+    // 空狀態
+    if (!items.length) {
+      list.innerHTML = `
+        <div style="text-align:center;padding:24px 0;color:var(--sub);font-size:13px;">
+          <div style="font-size:28px;margin-bottom:8px;">📭</div>
+          目前沒有申請紀錄
+        </div>`;
+      if (outer) outer.classList.add('no-more');
+      return;
+    }
+
+    // 渲染紀錄
+    list.innerHTML = items.map(item => {
+      const f       = item.fields || {};
+      const stage   = f.Stage  ?? '';
+      const status  = f.Status ?? '';
+      const title   = f.Title  ?? '（無標題）';
+      const platform = f.Platform ?? '';
+      const dateStr  = f.SubmittedAt
+        ? f.SubmittedAt.slice(0, 10).replace(/-/g, '/')
+        : '';
+
+      // badge 判斷
+      let badgeClass, badgeText, dotClass, desc;
+      if (status === SOCIAL.STAGE.APPROVED || stage === SOCIAL.STAGE.APPROVED) {
+        badgeClass = 'badge-approved'; badgeText = '✅ 已核准'; dotClass = 'dot-approved';
+        desc = '已核准';
+      } else if (status === SOCIAL.STAGE.REJECTED || stage === SOCIAL.STAGE.REJECTED) {
+        badgeClass = 'badge-rejected'; badgeText = '❌ 已退回'; dotClass = 'dot-rejected';
+        desc = '已退回，請重新填寫';
+      } else {
+        badgeClass = 'badge-pending'; badgeText = '⏳ 審核中'; dotClass = 'dot-pending';
+        const stageDesc = {
+          [SOCIAL.STAGE.STAGE2]: '等待 第一關（所長）審核',
+          [SOCIAL.STAGE.STAGE3]: '等待 第二關（行銷）審核',
+          [SOCIAL.STAGE.STAGE4]: '等待 第三關（部長）審核',
+        };
+        desc = stageDesc[stage] ?? '送審中';
+      }
+
+      return `
+        <a class="my-app-item" href="review.html?id=${item.id}">
+          <div class="my-app-dot ${dotClass}"></div>
+          <div class="my-app-body">
+            <div class="my-app-title">${title}</div>
+            <div class="my-app-meta">
+              <span>#${item.id}</span>
+              ${platform ? `<span class="sep">·</span><span>${platform}</span>` : ''}
+              ${dateStr  ? `<span class="sep">·</span><span>${dateStr}</span>` : ''}
+              <span class="sep">·</span><span>${desc}</span>
+            </div>
+          </div>
+          <span class="app-badge ${badgeClass}">${badgeText}</span>
+          <span class="my-app-arrow">›</span>
+        </a>`;
+    }).join('');
+
+    // 捲動偵測：捲到底移除漸層遮罩
+    if (scroll && outer) {
+      // 若全部內容都在可見範圍內，直接隱藏遮罩
+      if (scroll.scrollHeight <= scroll.clientHeight + 4) {
+        outer.classList.add('no-more');
+      }
+      scroll.addEventListener('scroll', () => {
+        const atBottom = scroll.scrollTop + scroll.clientHeight >= scroll.scrollHeight - 4;
+        outer.classList.toggle('no-more', atBottom);
+      }, { passive: true });
+    }
+
+  } catch (err) {
+    console.warn('[myApps] 載入失敗', err);
+    list.innerHTML = `
+      <div style="text-align:center;padding:16px;color:var(--sub);font-size:12px;">
+        載入申請紀錄失敗
+      </div>`;
+    if (outer) outer.classList.add('no-more');
+  }
 }
 
 /** 設為�
