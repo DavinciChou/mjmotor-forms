@@ -371,11 +371,11 @@
 </div><!-- /.page-wrap -->
 
 <!-- form.js（ES module） -->
-<script type="module" src="form.js"></script>
+<script type="module" src="form.js?v=4"></script>
 
 <!-- topbar 使用者名稱 -->
 <script type="module">
-  import { getCurrentUser } from '../shared/auth.js';
+  import { getCurrentUser } from '../shared/auth.js?v=4';
   const update = () => {
     const u = getCurrentUser();
     if (u) document.getElementById('user-display').textContent = u.name;

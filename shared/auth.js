@@ -9,7 +9,7 @@
  *   const user  = getCurrentUser(); // { name, email, account }
  */
 
-import { CLIENT_ID, AUTHORITY, GRAPH_SCOPES } from './config.js';
+import { CLIENT_ID, AUTHORITY, GRAPH_SCOPES } from './config.js?v=4';
 
 // ─── MSAL 設定 ────────────────────────────────────────────────────────────────
 const msalConfig = {

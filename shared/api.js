@@ -12,8 +12,8 @@
  *   const items = await API.listItems(LIST_NAME);
  */
 
-import { getToken }                           from './auth.js';
-import { GRAPH_BASE, SP_HOST, SP_SITE_PATH }  from './config.js';
+import { getToken }                           from './auth.js?v=4';
+import { GRAPH_BASE, SP_HOST, SP_SITE_PATH }  from './config.js?v=4';
 
 // ─── 內部快取 ─────────────────────────────────────────────────────────────────
 let _siteId         = null;   // SP site GUID
