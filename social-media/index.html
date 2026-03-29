@@ -8,28 +8,31 @@
   <!-- MSAL.js v2（CDN） -->
   <script src="https://alcdn.msauth.net/browser/2.38.3/js/msal-browser.min.js"></script>
 
-  <!-- 全站樣式（可依需求抽出成 shared/style.css） -->
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --primary:   #3182ce;
-      --primary-l: #ebf8ff;
-      --success:   #38a169;
-      --danger:    #e53e3e;
-      --warning:   #d69e2e;
-      --border:    #e2e8f0;
-      --bg:        #f7fafc;
-      --text:      #2d3748;
-      --sub:       #718096;
-      --radius:    10px;
-      --shadow:    0 2px 12px rgba(0,0,0,.08);
+      --primary:     #3182ce;
+      --primary-l:   #ebf8ff;
+      --primary-d:   #2c5282;
+      --success:     #38a169;
+      --danger:      #e53e3e;
+      --border:      #e2e8f0;
+      --bg:          #f0f4f8;
+      --text:        #2d3748;
+      --sub:         #718096;
+      --auto-bg:     #edf7ff;
+      --auto-border: #90cdf4;
+      --auto-text:   #2b6cb0;
+      --radius:      8px;
+      --shadow:      0 1px 6px rgba(0,0,0,.08);
     }
 
     body {
       font-family: 'Segoe UI', 'Microsoft JhengHei', sans-serif;
       background: var(--bg);
       color: var(--text);
+      font-size: 14px;
       min-height: 100vh;
     }
 
@@ -37,27 +40,23 @@
     .topbar {
       background: #1a365d;
       color: #fff;
-      padding: 0 24px;
-      height: 56px;
+      padding: 0 20px;
+      height: 48px;
       display: flex;
       align-items: center;
-      gap: 14px;
-      box-shadow: 0 2px 8px rgba(0,0,0,.18);
+      gap: 12px;
+      box-shadow: 0 2px 6px rgba(0,0,0,.2);
     }
-    .topbar img { height: 32px; }
-    .topbar-title { font-size: 17px; font-weight: 700; letter-spacing: .5px; }
-    .topbar-sub { font-size: 12px; opacity: .7; }
+    .topbar-title { font-size: 16px; font-weight: 700; }
+    .topbar-sub   { font-size: 11px; opacity: .65; }
     .topbar-spacer { flex: 1; }
-    .user-badge {
-      font-size: 13px; opacity: .85;
-      display: flex; align-items: center; gap: 6px;
-    }
+    .user-badge { font-size: 12px; opacity: .85; display: flex; align-items: center; gap: 5px; }
 
-    /* ── 版面容器 ── */
+    /* ── 版面 ── */
     .page-wrap {
-      max-width: 760px;
-      margin: 32px auto;
-      padding: 0 16px 60px;
+      max-width: 680px;
+      margin: 14px auto;
+      padding: 0 12px 40px;
     }
 
     /* ── 卡片 ── */
@@ -65,36 +64,74 @@
       background: #fff;
       border-radius: var(--radius);
       box-shadow: var(--shadow);
-      padding: 28px 32px;
-      margin-bottom: 20px;
+      padding: 14px 18px;
+      margin-bottom: 10px;
     }
     .card-title {
-      font-size: 15px;
+      font-size: 13px;
       font-weight: 700;
       color: var(--primary);
-      margin-bottom: 18px;
-      padding-bottom: 10px;
+      margin-bottom: 12px;
+      padding-bottom: 7px;
       border-bottom: 2px solid var(--primary-l);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .card-title .note { font-size: 10px; color: var(--sub); font-weight: 400; }
+
+    /* ── Grid ── */
+    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0 14px; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr;     gap: 0 14px; }
+    @media (max-width: 560px) {
+      .grid-3, .grid-2 { grid-template-columns: 1fr; }
     }
 
-    /* ── 表單欄位 ── */
-    .field-row { margin-bottom: 16px; }
+    /* ── 欄位 ── */
+    .field-row { margin-bottom: 10px; }
+    .field-row:last-child { margin-bottom: 0; }
     .field-row label {
       display: block;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--sub);
+      margin-bottom: 4px;
+      letter-spacing: .2px;
+    }
+    .required { color: var(--danger); margin-left: 2px; }
+
+    /* ── 自動帶入欄位 ── */
+    .auto-field {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 10px;
+      border: 1.5px solid var(--auto-border);
+      border-radius: 6px;
+      background: var(--auto-bg);
+      color: var(--auto-text);
       font-size: 13px;
       font-weight: 600;
-      color: var(--text);
-      margin-bottom: 6px;
+      min-height: 34px;
     }
-    .field-row label .required { color: var(--danger); margin-left: 2px; }
-    .field-row input,
+    .auto-field .lock { font-size: 10px; opacity: .6; margin-left: auto; flex-shrink: 0; }
+    .auto-field.loading {
+      color: var(--sub);
+      font-weight: 400;
+      background: #f7fafc;
+      border-color: var(--border);
+    }
+
+    /* ── 一般 input / select / textarea ── */
+    .field-row input[type=text],
+    .field-row input[type=date],
     .field-row select,
     .field-row textarea {
       width: 100%;
-      padding: 10px 12px;
+      padding: 7px 10px;
       border: 1.5px solid var(--border);
-      border-radius: 8px;
-      font-size: 14px;
+      border-radius: 6px;
+      font-size: 13px;
       font-family: inherit;
       color: var(--text);
       background: #fff;
@@ -104,74 +141,69 @@
     .field-row input:focus,
     .field-row select:focus,
     .field-row textarea:focus { border-color: var(--primary); }
-    .field-row input[readonly],
-    .field-row textarea[readonly] { background: #f7fafc; color: var(--sub); }
 
-    .field-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 20px; }
-    @media (max-width: 540px) { .field-grid { grid-template-columns: 1fr; } }
-
-    /* ── 審核人唯讀卡 ── */
-    .reviewer-grid {
+    /* ── 上傳槽 ── */
+    .upload-row {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 12px;
-      margin-top: 4px;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
     }
-    @media (max-width: 580px) { .reviewer-grid { grid-template-columns: 1fr; } }
-    .reviewer-card {
+    @media (max-width: 480px) { .upload-row { grid-template-columns: 1fr; } }
+    .upload-slot {
+      border: 1.5px dashed #cbd5e0;
+      border-radius: 6px;
+      padding: 10px;
+      text-align: center;
+      cursor: pointer;
+      transition: background .15s;
+    }
+    .upload-slot:hover { background: var(--primary-l); }
+    .slot-label { font-size: 10px; color: var(--sub); margin-bottom: 3px; }
+    .slot-btn   { font-size: 12px; color: var(--primary); font-weight: 700; cursor: pointer; display: block; }
+    .slot-note  { font-size: 9px; color: #a0aec0; margin-top: 2px; }
+    .file-list  { display: flex; flex-direction: column; gap: 4px; margin-top: 6px; text-align: left; }
+
+    /* ── 審核進度（四欄） ── */
+    .stage-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+    @media (max-width: 520px) { .stage-row { grid-template-columns: 1fr 1fr; } }
+    .stage-chip {
       background: var(--bg);
       border: 1.5px solid var(--border);
-      border-radius: 8px;
-      padding: 12px 14px;
+      border-radius: 6px;
+      padding: 8px 10px;
     }
-    .reviewer-card .role { font-size: 11px; color: var(--sub); font-weight: 600; margin-bottom: 4px; }
-    .reviewer-card .name { font-size: 14px; font-weight: 700; }
-    .reviewer-card .email { font-size: 11px; color: var(--sub); margin-top: 2px; word-break: break-all; }
-
-    /* ── 媒體上傳 ── */
-    .upload-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 9px 16px;
-      background: var(--primary-l);
-      color: var(--primary);
-      border: 1.5px dashed var(--primary);
-      border-radius: 8px;
-      font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: background .2s;
-    }
-    .upload-btn:hover { background: #bee3f8; }
-    .file-list { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; }
+    .stage-chip .stage-no     { font-size: 10px; color: var(--sub); font-weight: 700; margin-bottom: 2px; }
+    .stage-chip .stage-person { font-size: 12px; font-weight: 700; margin-bottom: 4px; }
+    .stage-chip .stage-time   { font-size: 10px; color: var(--sub); margin-top: 3px; min-height: 14px; }
 
     /* ── 送出按鈕 ── */
     .submit-btn {
       width: 100%;
-      padding: 14px;
+      padding: 11px;
       background: var(--primary);
       color: #fff;
       border: none;
       border-radius: var(--radius);
-      font-size: 16px;
+      font-size: 15px;
       font-weight: 700;
       cursor: pointer;
-      transition: background .2s;
       font-family: inherit;
+      margin-top: 2px;
+      transition: background .2s;
     }
-    .submit-btn:hover:not(:disabled) { background: #2c5282; }
+    .submit-btn:hover:not(:disabled) { background: var(--primary-d); }
     .submit-btn:disabled { opacity: .6; cursor: not-allowed; }
 
     /* ── 確認畫面 ── */
     #confirm-section { display: none; }
-    .confirm-box {
-      text-align: center;
-      padding: 40px 24px;
-    }
-    .confirm-icon { font-size: 56px; }
+    .confirm-box { text-align: center; padding: 40px 24px; }
+    .confirm-icon  { font-size: 56px; }
     .confirm-title { font-size: 22px; font-weight: 700; color: var(--success); margin-top: 14px; }
-    .confirm-sub { font-size: 14px; color: var(--sub); margin-top: 8px; line-height: 1.6; }
+    .confirm-sub   { font-size: 14px; color: var(--sub); margin-top: 8px; line-height: 1.6; }
     .confirm-id {
       display: inline-block;
       margin-top: 14px;
@@ -183,56 +215,48 @@
       font-weight: 700;
     }
 
-    /* ── 隱藏 input ── */
+    /* 隱藏 file input */
     input[type=file] { display: none; }
   </style>
 </head>
 <body>
 
-<!-- 頂部導覽列 -->
+<!-- 頂部 Bar -->
 <header class="topbar">
   <div class="topbar-title">銘勁汽車</div>
   <div class="topbar-sub">自媒體素材審核申請</div>
   <div class="topbar-spacer"></div>
-  <div class="user-badge">
-    <span>👤</span>
-    <span id="user-display">載入中…</span>
-  </div>
+  <div class="user-badge">👤 <span id="user-display">載入中…</span></div>
 </header>
 
-<!-- ── 申請表單 ── -->
 <div class="page-wrap">
   <div id="form-section">
 
-    <!-- 申請人資訊 -->
+    <!-- ① 申請資訊 -->
     <div class="card">
-      <div class="card-title">📋 申請人資訊</div>
-      <div class="field-grid">
+      <div class="card-title">📋 申請資訊</div>
+
+      <!-- 自動帶入三欄：姓名 / Email / 據點 -->
+      <div class="grid-3" style="margin-bottom:12px;">
         <div class="field-row">
           <label>姓名</label>
-          <input id="applicant-name" type="text" readonly placeholder="SSO 自動帶入" />
+          <div class="auto-field loading" id="applicant-name-display">載入中… <span class="lock">🔒</span></div>
+          <input type="hidden" id="applicant-name" />
         </div>
         <div class="field-row">
           <label>Email</label>
-          <input id="applicant-email" type="email" readonly placeholder="SSO 自動帶入" />
+          <div class="auto-field loading" id="applicant-email-display" style="font-size:11px;">載入中… <span class="lock">🔒</span></div>
+          <input type="hidden" id="applicant-email" />
+        </div>
+        <div class="field-row">
+          <label>據點</label>
+          <div class="auto-field loading" id="location-display">載入中… <span class="lock">🔒</span></div>
+          <input type="hidden" id="location" />
         </div>
       </div>
-    </div>
 
-    <!-- 貼文資訊 -->
-    <div class="card">
-      <div class="card-title">📣 貼文資訊</div>
-
-      <div class="field-grid">
-        <div class="field-row">
-          <label for="location">據點 <span class="required">*</span></label>
-          <select id="location">
-            <option value="">請選擇據點</option>
-            <option value="銘勁八德所">銘勁八德所</option>
-            <option value="銘勁中壢所">銘勁中壢所</option>
-            <option value="銘勁桃園所">銘勁桃園所</option>
-          </select>
-        </div>
+      <!-- 發布資訊兩欄 -->
+      <div class="grid-2" style="margin-bottom:10px;">
         <div class="field-row">
           <label for="platform">發布平台 <span class="required">*</span></label>
           <select id="platform">
@@ -244,79 +268,73 @@
             <option value="其他">其他</option>
           </select>
         </div>
+        <div class="field-row">
+          <label for="post-date">預計發布日期 <span class="required">*</span></label>
+          <input id="post-date" type="date" />
+        </div>
       </div>
 
       <div class="field-row">
         <label for="post-title">貼文標題 <span class="required">*</span></label>
         <input id="post-title" type="text" placeholder="請填寫貼文標題" maxlength="200" />
       </div>
-
-      <div class="field-row">
-        <label for="post-date">預計發布日期 <span class="required">*</span></label>
-        <input id="post-date" type="date" />
-      </div>
-
       <div class="field-row">
         <label for="caption">貼文說明文字</label>
-        <textarea id="caption" rows="4" placeholder="貼文內容草稿（選填）"></textarea>
+        <textarea id="caption" rows="2" style="resize:none;" placeholder="貼文內容草稿（選填）"></textarea>
       </div>
     </div>
 
-    <!-- 媒體上傳 -->
+    <!-- ② 媒體素材 -->
     <div class="card">
       <div class="card-title">🖼️ 媒體素材</div>
-
-      <!-- 照片 -->
-      <div class="field-row">
-        <label>照片（最多 2 張，JPG / PNG / HEIC 等）</label>
-        <label class="upload-btn" for="photo-input">
-          ＋ 選擇照片
-        </label>
-        <input id="photo-input" type="file" accept=".jpg,.jpeg,.png,.gif,.webp,.heic,.heif" multiple />
-        <div id="photo-list" class="file-list"></div>
+      <div class="upload-row">
+        <div class="upload-slot">
+          <div class="slot-label">照片（最多 2 張）</div>
+          <label class="slot-btn" for="photo-input">＋ 選擇照片</label>
+          <div class="slot-note">JPG / PNG / HEIC</div>
+          <div id="photo-list" class="file-list"></div>
+        </div>
+        <div class="upload-slot">
+          <div class="slot-label">短影音（最多 1 支）</div>
+          <label class="slot-btn" for="video-input">＋ 選擇影片</label>
+          <div class="slot-note">MP4 / MOV，1 分鐘內</div>
+          <div id="video-list" class="file-list"></div>
+        </div>
+        <div class="upload-slot">
+          <div class="slot-label">其他附件（最多 3 個）</div>
+          <label class="slot-btn" for="attach-input">＋ 選擇附件</label>
+          <div class="slot-note">PDF / Word / Excel</div>
+          <div id="attach-list" class="file-list"></div>
+        </div>
       </div>
-
-      <!-- 影片 -->
-      <div class="field-row">
-        <label>影片（最多 1 支，MP4 / MOV 等，建議 ≤ 500 MB）</label>
-        <label class="upload-btn" for="video-input">
-          ＋ 選擇影片
-        </label>
-        <input id="video-input" type="file" accept=".mp4,.mov,.avi,.mkv,.webm" />
-        <div id="video-list" class="file-list"></div>
-      </div>
-
-      <!-- 附件 -->
-      <div class="field-row">
-        <label>其他附件（最多 3 個，PDF / Word / Excel 等）</label>
-        <label class="upload-btn" for="attach-input">
-          ＋ 選擇附件
-        </label>
-        <input id="attach-input" type="file"
-          accept=".pdf,.docx,.xlsx,.pptx,.zip,.txt"
-          multiple />
-        <div id="attach-list" class="file-list"></div>
-      </div>
+      <input id="photo-input"  type="file" accept=".jpg,.jpeg,.png,.gif,.webp,.heic,.heif" multiple />
+      <input id="video-input"  type="file" accept=".mp4,.mov,.avi,.mkv,.webm" />
+      <input id="attach-input" type="file" accept=".pdf,.docx,.xlsx,.pptx,.zip,.txt" multiple />
     </div>
 
-    <!-- 審核人（路由表自動帶入，唯讀） -->
+    <!-- ③ 審核進度（四欄） -->
     <div class="card">
-      <div class="card-title">👥 審核人員（系統自動帶入）</div>
-      <div class="reviewer-grid">
-        <div class="reviewer-card">
-          <div class="role">第二關 — 所長</div>
-          <div class="name" id="reviewer2-name">—</div>
-          <div class="email" id="reviewer2-email">尚未選擇據點</div>
+      <div class="card-title">👥 審核進度 <span class="note">系統依據點自動帶入</span></div>
+      <div class="stage-row">
+        <div class="stage-chip">
+          <div class="stage-no">第一關 — 申請人</div>
+          <div class="stage-person" id="stage1-person">—</div>
+          <div class="stage-time"   id="stage1-time" style="color:#a0aec0;">尚未送出</div>
         </div>
-        <div class="reviewer-card">
-          <div class="role">第三關 — 行銷</div>
-          <div class="name" id="reviewer3-name">—</div>
-          <div class="email" id="reviewer3-email">尚未選擇據點</div>
+        <div class="stage-chip">
+          <div class="stage-no">第二關 — 所長</div>
+          <div class="stage-person" id="reviewer2-name">—</div>
+          <div class="stage-time"   id="reviewer2-time" style="color:#a0aec0;">尚未審核</div>
         </div>
-        <div class="reviewer-card">
-          <div class="role">第四關 — 部長</div>
-          <div class="name" id="reviewer4-name">—</div>
-          <div class="email" id="reviewer4-email">尚未選擇據點</div>
+        <div class="stage-chip">
+          <div class="stage-no">第三關 — 行銷</div>
+          <div class="stage-person" id="reviewer3-name">—</div>
+          <div class="stage-time"   id="reviewer3-time" style="color:#a0aec0;">尚未審核</div>
+        </div>
+        <div class="stage-chip">
+          <div class="stage-no">第四關 — 部長</div>
+          <div class="stage-person" id="reviewer4-name">—</div>
+          <div class="stage-time"   id="reviewer4-time" style="color:#a0aec0;">尚未審核</div>
         </div>
       </div>
       <!-- 隱藏欄位：供 form.js 讀取 -->
@@ -333,7 +351,7 @@
 
   </div><!-- /#form-section -->
 
-  <!-- ── 確認畫面 ── -->
+  <!-- 確認畫面 -->
   <div id="confirm-section">
     <div class="card">
       <div class="confirm-box">
@@ -345,8 +363,6 @@
         </div>
         <div class="confirm-id">申請編號 <span id="confirm-item-id">—</span></div>
       </div>
-
-      <!-- 四階段進度條 -->
       <div class="card-title" style="margin-top:8px;">審核進度</div>
       <div id="confirm-tracker"></div>
     </div>
@@ -357,10 +373,8 @@
 <!-- form.js（ES module） -->
 <script type="module" src="form.js"></script>
 
-<!-- 同步更新 topbar 使用者名稱（auth.js 初始化後觸發） -->
+<!-- topbar 使用者名稱 -->
 <script type="module">
-  // form.js 完成 loginIfNeeded() 後，getCurrentUser 才能使用
-  // 這裡用一個簡單的 polling 更新 UI（形式上不需要複雜機制）
   import { getCurrentUser } from '../shared/auth.js';
   const update = () => {
     const u = getCurrentUser();
