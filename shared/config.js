@@ -19,7 +19,7 @@ export const GRAPH_SCOPES = [
 
 // ─── SharePoint ───────────────────────────────────────────────────────────────
 export const SP_HOST      = 'fetcb107004.sharepoint.com';
-export const SP_SITE_PATH = '/sites/technology';          // 目前使用的 SP 網站
+export const SP_SITE_PATH = '/sites/sa0';          // SA0 營業部
 export const SP_SITE_URL  = `https://${SP_HOST}${SP_SITE_PATH}`;
 
 // Graph API 根端點
@@ -32,13 +32,13 @@ export const SOCIAL = {
   LIST_NAME: '自媒體素材審核資料',
 
   /** SiteAssets 下的媒體存放根目錄 */
-  MEDIA_ROOT: '自媒體素材審核',
+  MEDIA_ROOT: '自媒體素材審核/media',
 
   /** 審核路由表 Excel（相對於 SiteAssets/） */
-  ROUTE_TABLE_PATH: '自媒體素材審核/審核路由表.xlsx',
+  ROUTE_TABLE_PATH: '自媒體素材審核/_config/審核路由表.xlsx',
 
   /** 勞工名冊 Excel（相對於 SiteAssets/，全表單共用） */
-  ROSTER_PATH: 'mjmotor-forms/_config/勞工名冊讀取檔案.xlsx',
+  ROSTER_PATH: '自媒體素材審核/_config/勞工名冊.xlsx',
 
   /** 支援的照片副檔名（轉小寫後比對） */
   PHOTO_EXTS: ['jpg', 'jpeg', 'png', 'gif', 'webp', 'heic', 'heif'],
