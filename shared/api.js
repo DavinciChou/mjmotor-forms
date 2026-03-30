@@ -254,6 +254,34 @@ async function _uploadLarge(remotePath, file, onProgress) {
   return webUrl;
 }
 
+/**
+ *  * 將 SP webUrl 轉為匿名下載 URL（解決手機無 SP cookie 問題）
+  * @param {string} urlOrPath  SP webUrl 或相對路徑
+   * @returns {Promise<string>} Graph downloadUrl 或原始 URL（fallback）
+    */
+    export async function getDownloadUrl(urlOrPath) {
+      requireInit();
+        try {
+            let relPath = urlOrPath;
+                const idx = urlOrPath.indexOf('/SiteAssets/');
+                    if (idx !== -1) {
+                          relPath = urlOrPath.substring(idx + '/SiteAssets/'.length);
+                              }
+                                  relPath = decodeURIComponent(relPath);
+                                      const encoded = relPath.split('/').map(encodeURIComponent).join('/');
+                                          const url = `${GRAPH_BASE}/drives/${_siteAssetsId}/root:/${encoded}`;
+                                              const res = await authFetch(url, {
+                                                    headers: { Accept: 'application/json' },
+                                                        });
+                                                            if (!res.ok) return urlOrPath;
+                                                                const data = await res.json();
+                                                                    return data['@microsoft.graph.downloadUrl'] || data.webUrl || urlOrPath;
+                                                                      } catch {
+                                                                          return urlOrPath;
+                                                                            }
+                                                                            }
+ */
+
 // ??? 蝣箔??桅?摮 ?????????????????????????????????????????????????????????????
 
 /**

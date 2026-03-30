@@ -11,9 +11,9 @@
  */
 
 import { loginIfNeeded } from '../shared/auth.js?v=12';
-import * as API                          from '../shared/api.js?v=13';
+import * as API                          from '../shared/api.js?v=15';
 import * as UI                           from '../shared/ui.js?v=11';
-import { SOCIAL }                        from '../shared/config.js?v=11';
+import { SOCIAL }                        from '../shared/config.js?v=12';
 
 // ─── 進入點 ───────────────────────────────────────────────────────────────────
 
@@ -109,7 +109,7 @@ function renderTracker() {
 }
 
 // 媒體預覽
-function renderMedia() {
+async function renderMedia() {
   // ── 照片 + 附件（MEDIA_PATHS）
   const rawMedia = _fields[SOCIAL.FIELD.MEDIA_PATHS];
   let mediaPaths = {};
@@ -118,7 +118,8 @@ function renderMedia() {
   const photoWrap = document.getElementById('r-photos');
   if (photoWrap) {
     if (mediaPaths.photos?.length) {
-      photoWrap.innerHTML = mediaPaths.photos.map(p => `
+      const rp = await Promise.all(mediaPaths.photos.map(async p => ({ ...p, url: await API.getDownloadUrl(p.url) })));
+      photoWrap.innerHTML = rp.map(p => `
         <div style="cursor:zoom-in;" onclick="window._openLightbox('${p.url}','${p.name}')">
           <img src="${p.url}" alt="${p.name}" style="
             width:160px;height:120px;object-fit:cover;border-radius:8px;
@@ -138,7 +139,8 @@ function renderMedia() {
   const videoWrap = document.getElementById('r-videos');
   if (videoWrap) {
     if (videoPaths.length) {
-      videoWrap.innerHTML = videoPaths.map(v => `
+      const rv = await Promise.all(videoPaths.map(async v => ({ ...v, url: await API.getDownloadUrl(v.url) })));
+      videoWrap.innerHTML = rv.map(v => `
         <div>
           <video src="${v.url}" controls style="
             max-width:100%;border-radius:8px;border:2px solid #e2e8f0;"></video>
@@ -153,7 +155,8 @@ function renderMedia() {
   const attachWrap = document.getElementById('r-attachments');
   if (attachWrap) {
     if (mediaPaths.attachments?.length) {
-      attachWrap.innerHTML = mediaPaths.attachments.map(a => `
+      const ra = await Promise.all(mediaPaths.attachments.map(async a => ({ ...a, url: await API.getDownloadUrl(a.url) })));
+      attachWrap.innerHTML = ra.map(a => `
         <a href="${a.url}" target="_blank" style="
           display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 14px;
           background:#ebf8ff;border:1px solid #bee3f8;border-radius:8px;
